@@ -20,18 +20,40 @@
 • Pequena descrição sobre o problema e a forma como o resolveram. Deve oferecer ao leitor informação suficiente para entender e contextualizar o projeto,
 bem como quais foram os objetivos e resultados alcançados.
 
-This project aims to simulate the behavior of crowds at a large-scale music festival of which the setting includes multiple stages, food courts and green spaces, where agents move around independently according to their needs (watching shows, resting or eating). This includes their reactions to dangerous events that incite panic like explosions and fires, where the agents must try to escape through the exits of the location.
+This project aims to simulate crowd behavior at large scale events with different settings like concert stages, food courts and green spaces. Here agents move around independently according to their needs (watching shows, resting or eating), and react to hazards that incite panic like explosions and fires, where the agents must try to escape through the exits of the event.
 
-To achieve an efficient simulation with support for a high number of agents simultaneously, we chose to use **DotRecast**, a library that allows the generation of navigation meshes (navmeshes) and path calculation based on the A* algorithm, and should optimize pathfinding without relying on too detailed physics. We are also implementing a **finite state machine (FSM)** to control each agent's high-level decisions with teh same intent, as the required states, wander/idle, watching concert, hungry, eating, tired, resting and panicked are few, and therefore a good number for FSM implementation.
+To achieve an efficient simulation with support for a high number of agents simultaneously, we chose to use **DotRecast**, a library that allows the generation of navigation meshes (navmeshes) and path calculation based on the A* algorithm, and should optimize pathfinding without relying on too detailed physics. We are also implementing a **finite state machine (FSM)** to control each agent's high-level decisions with the same intent, as the required states, wander/idle, watching concert, hungry, eating, tired, resting and panicked are few, and therefore a good number for FSM implementation.
+
+• why choose 2dvs3dvs2.5d here
 
 ### Crowd Panic Research
 
-• Deve também ser apresentada nesta secção a pesquisa efetuada sobre simulação baseada em agentes aplicada ao pânico em multidões.
+According to Helbing et al. (2007), panic is triggered by sudden hazards, like the explosions and fire in this project, and spreads quickly as people replicate the fear driven actions of those around them. In learning this, and according to the project guidelines, panic would not be only spread through the immediate explosion range, but also through through a chain reaction propagated continuously by panicked agents.
 
-https://www.sciencedirect.com/science/article/pii/S2352146514001355
+#### What things do people do when they panic?
 
-https://www.researchgate.net/publication/226065087_Pedestrian_Crowd_and_Evacuation_Dynamics
+Once panicked, people enter flight, flight or freeze responses, and for this project we would be researching flight, where individuals abandon rational decisions over instinctively escaping the hazard as quickly as possible.
 
+In high-density crowds, panic can quickly become dangerous as individuals lose the ability to move independently. In such situations, the crowd behaves like a fluid, when people begin to push, pressure builds up. Even in calm crowds, this can lead to crowd crushes where fatalities occur due to asphyxiation, most commonly while individuals are simply standing, contrary to popular belief that it occurs by trampling.
+
+##### How to replicate these behaviors?
+
+Panic movement often leads to herding (when the crowd starts following the movements of one another), bottlenecks (when the crowd tries to pass through too narrow places all at once), and chaotic motion (unpredictable movement from conflicting intentions in the crowd).
+
+To reflect this, while the agents reach for their nearest exit they would:
+
+* Have increased speed;
+* Not have path preferences (by removing weights);
+* Prefer to move away from the hazard;
+* Show flocking behaviors when near other panicked agents.
+
+The exits in crowd situations can influence evacuation scenarios as Wagner & Agrawal (2014) states, and we could also incorporate this by exploring different the numbers and poisonings of exits in the festival, which we can use to study bottlenecks crowd behavior.
+
+#### Reproducibility
+
+Fachada et al. (2015) explains agent models with reproducibility, so while not setting rules for panic behavior it promotes good practices for when working in a team and trying to achieve the same results.
+
+For our project this means defining states and values clearly, having a modular state system, thus FSM, and having consistent logic such as update order and pseudo randoms. These definitions should also help us see how crowd behavior arises from all the agents individual choices.
 
 ---
 
@@ -96,6 +118,15 @@ no projeto, caso tenha sido esse o caso.
 ---
 
 ## References
+
+
+<https://www.sciencedirect.com/science/article/pii/S2352146514001355>
+
+<https://www.researchgate.net/publication/226065087_Pedestrian_Crowd_and_Evacuation_Dynamics>
+
+<https://peerj.com/articles/cs-36.pdf>
+
+<https://www.youtube.com/watch?v=ldOprmqSt7o>
 
 ### Open Code
 
