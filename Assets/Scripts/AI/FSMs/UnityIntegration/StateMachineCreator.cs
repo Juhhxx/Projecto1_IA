@@ -5,7 +5,7 @@ using Scripts.AI.FSMs.BaseFiles;
 
 namespace Scripts.AI.FSMs.UnityIntegration
 {
-    [CreateAssetMenu(fileName = "StateMachine", menuName = "Scriptable Objects/StateMachine")]
+    [CreateAssetMenu(fileName = "StateMachine", menuName = "State Machines/StateMachine")]
     public class StateMachineCreator : ScriptableObject
     {
         private StateMachine stateMachine;

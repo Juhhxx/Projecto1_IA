@@ -6,7 +6,7 @@ using Scripts.AI.FSMs.UnityIntegration;
 
 namespace Scripts.AI
 {
-    [CreateAssetMenu(fileName = "StateExample", menuName = "Scriptable Objects/StateExample")]
+    [CreateAssetMenu(fileName = "StateExample", menuName = "State Machines/StateExample")]
     public class StateExample : StateAbstract
     {
         public string Name;

@@ -5,7 +5,7 @@ using Scripts.AI.FSMs.UnityIntegration;
 
 namespace Scripts.AI
 {
-    [CreateAssetMenu(fileName = "TransitionKeyPressed", menuName = "Scriptable Objects/TransitionKeyPressed")]
+    [CreateAssetMenu(fileName = "TransitionKeyPressed", menuName = "State Machines/TransitionKeyPressed")]
     public class TransitionKeyPressed : TransitionAbstract
     {
         public KeyCode Key;
