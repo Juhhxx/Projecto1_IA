@@ -1,7 +1,6 @@
 using UnityEngine;
-using Scripts.AI.FSMs.UnityIntegration;
 
-namespace Scripts.AI
+namespace Scripts.AI.FSMs.UnityIntegration
 {
     public class StateMachineRunner : MonoBehaviour
     {
