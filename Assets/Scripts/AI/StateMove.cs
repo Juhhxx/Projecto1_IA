@@ -9,15 +9,16 @@ namespace Scripts.AI
     [CreateAssetMenu(fileName = "StateMove", menuName = "State Machines/StateMove")]
     public class StateMove : StateAbstract
     {
+        private GameObject  gameObject;
+        private Transform   transform;
         public string Name;
-        public GameObject gameObject;
         protected override void EntryAction()
         {
             Debug.Log($"Start State {Name}");
         }
         protected override void StateAction()
         {
-            Debug.Log($"Doing State {gameObject.transform.position}");
+            Debug.Log($"Doing State {transform.position}");
         }
         protected override void ExitAction()
         {
@@ -25,6 +26,9 @@ namespace Scripts.AI
         }
         public override void InstantiateState()
         {
+            gameObject  = base.objectReference;
+            transform   = gameObject.transform;
+
             base.state = new State(Name,EntryAction,StateAction,ExitAction);
         }
     }

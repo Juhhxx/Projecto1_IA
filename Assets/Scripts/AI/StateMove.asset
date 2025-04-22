@@ -12,5 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 75df3ec1816b09f488ccb753e7ac97da, type: 3}
   m_Name: StateMove
   m_EditorClassIdentifier: 
-  Name: 
+  Name: Move
   gameObject: {fileID: 0}

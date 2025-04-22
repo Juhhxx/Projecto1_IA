@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b9a94ab67aaf78a4fa9859eda011259d, type: 3}
   m_Name: TransitionKeyPressed 1
   m_EditorClassIdentifier: 
-  Name: BtoA
+  Name: MtoA
   ToState: {fileID: 11400000, guid: da7e52c19f5e4f84ea12a83bfa39c69e, type: 2}
   Key: 97

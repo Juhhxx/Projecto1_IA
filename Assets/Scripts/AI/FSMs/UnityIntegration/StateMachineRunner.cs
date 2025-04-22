@@ -4,15 +4,16 @@ namespace Scripts.AI.FSMs.UnityIntegration
 {
     public class StateMachineRunner : MonoBehaviour
     {
-        [SerializeField] private StateMachineCreator stateMachine;
+        [SerializeField] private StateMachineCreator _stateMachine;
 
         private void Start()
         {
-            stateMachine.InstantiateStateMachine();
+            _stateMachine.SetObjectReference(gameObject);
+            _stateMachine.InstantiateStateMachine();
         }
         private void Update()
         {
-            stateMachine.Run();
+            _stateMachine.Run();
         }
     }
 }

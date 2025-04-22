@@ -8,7 +8,8 @@ namespace Scripts.AI.FSMs.UnityIntegration
     [CreateAssetMenu(fileName = "StateMachine", menuName = "State Machines/StateMachine")]
     public class StateMachineCreator : ScriptableObject
     {
-        private StateMachine stateMachine;
+        private StateMachine _stateMachine;
+        private GameObject _objectReference;
         public StateAbstract InitialState;
         public List<StateTransition> StateTransitions;
         
@@ -17,6 +18,7 @@ namespace Scripts.AI.FSMs.UnityIntegration
             foreach (StateTransition st in StateTransitions)
             {
                 Debug.Log($"Initializing State {st.State.name}");
+                st.State.SetObjectReference(_objectReference);
                 st.State.InstantiateState();
             }
             foreach (StateTransition st in StateTransitions)
@@ -28,14 +30,19 @@ namespace Scripts.AI.FSMs.UnityIntegration
                 }
             }
         }
+
+        public void SetObjectReference(GameObject go)
+        {
+            _objectReference = go;
+        }
         public void InstantiateStateMachine()
         {
             InstantiateStates();
-            stateMachine = new StateMachine(InitialState.State);
+            _stateMachine = new StateMachine(InitialState.State);
         }
         public void Run()
         {
-            stateMachine.Update()?.Invoke();
+            _stateMachine.Update()?.Invoke();
         }
     }
 }
