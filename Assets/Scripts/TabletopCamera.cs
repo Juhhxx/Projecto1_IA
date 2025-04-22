@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class Tabletop_camera : MonoBehaviour
+public class TabletopCamera : MonoBehaviour
 {
     [SerializeField] private Camera _cam;
     [SerializeField] private float _rotSpeed = 50f;
