@@ -23,7 +23,7 @@ namespace Scripts.AI.FSMs.UnityIntegration
             {
                 foreach (TransitionAbstract t in st.Transitions)
                 {
-                    t.IntantiateTransition();
+                    if (t.Transition == null) t.IntantiateTransition();
                     st.State.AddTransitions(t);
                 }
             }
@@ -39,3 +39,4 @@ namespace Scripts.AI.FSMs.UnityIntegration
         }
     }
 }
+
