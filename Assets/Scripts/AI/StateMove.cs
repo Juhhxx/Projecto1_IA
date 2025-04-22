@@ -6,17 +6,18 @@ using Scripts.AI.FSMs.UnityIntegration;
 
 namespace Scripts.AI
 {
-    [CreateAssetMenu(fileName = "StateExample", menuName = "State Machines/StateExample")]
-    public class StateExample : StateAbstract
+    [CreateAssetMenu(fileName = "StateMove", menuName = "State Machines/StateMove")]
+    public class StateMove : StateAbstract
     {
         public string Name;
+        public GameObject gameObject;
         protected override void EntryAction()
         {
             Debug.Log($"Start State {Name}");
         }
         protected override void StateAction()
         {
-            Debug.Log($"Doing State {Name}");
+            Debug.Log($"Doing State {gameObject.transform.position}");
         }
         protected override void ExitAction()
         {
