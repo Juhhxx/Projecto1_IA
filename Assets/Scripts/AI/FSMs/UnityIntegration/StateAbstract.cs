@@ -12,6 +12,9 @@ namespace Scripts.AI.FSMs.UnityIntegration
         public void AddTransitions(TransitionAbstract transAbstract) => 
         state.AddTransition(transAbstract.Transition);
 
+        protected abstract void EntryAction();
+        protected abstract void StateAction();
+        protected abstract void ExitAction();
         public abstract void InstantiateState();
     }
 }
