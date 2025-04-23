@@ -8,6 +8,14 @@ public class AgentTest : MonoBehaviour
     [SerializeField] private Renderer _boundBox; // for debug, remove later
     private IList<Vector3> Path = new List<Vector3>();
 
+    private ISeedRandom _rand;
+
+    private void Awake()
+    {
+        _rand = new SeedRandom(gameObject);
+        Debug.Log("This is RcRand: " + _rand.Range(0f, 40f));
+    }
+
     private void Start()
     {
         transform.position = SnapToNavMesh(transform.position);
@@ -15,9 +23,9 @@ public class AgentTest : MonoBehaviour
         Bounds values = _boundBox.bounds;
 
         Vector3 randomEnd = new Vector3(
-            Random.Range(values.min.x, values.max.x),
+            _rand.Range(values.min.x, values.max.x),
             transform.position.y, // Random.Range(values.min.y, values.max.y), // this wont be needed later i assume
-            Random.Range(values.min.z, values.max.z)
+            _rand.Range(values.min.z, values.max.z)
         );
 
         randomEnd = SnapToNavMesh(randomEnd);

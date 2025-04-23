@@ -19,11 +19,12 @@ public class ExplosionManager : MonoBehaviour
     [SerializeField] private List<Fire> _firePolyList = new();
 
     
-    private IRcRand _rand;
+    public static ISeedRandom Rand { get; private set; }
 
     private void Awake()
     {
-        _rand = new RcRand();
+        Rand = new RcSeedRandom(gameObject);
+        Debug.Log("This is RcRand: " + Rand.Range(0f, 40f));
 
         Debug.Log("Poly list count: " + _firePolyList.Count);
         foreach (Fire fire in _firePolyList)
@@ -131,13 +132,13 @@ public class ExplosionManager : MonoBehaviour
     {
         if ( _explode == null )
         {
-            float per = Random.Range(0f, 1f);
+            float per = Rand.Range(0f, 1f);
 
             if ( per < 0.005f )
             {
                 // Debug.Log("firepolys count: " + _firePolys.Count);
 
-                DRcHandle.NavQuery.FindRandomPoint(DRcHandle.Filter, _rand, out long polyRef, out RcVec3f centerPos);
+                DRcHandle.NavQuery.FindRandomPoint(DRcHandle.Filter, Rand as IRcRand, out long polyRef, out RcVec3f centerPos);
 
                 float radius = _explosionRadius + per;
                 List<long> resultRefs = PolysInCircle( polyRef, centerPos, radius);
@@ -146,7 +147,7 @@ public class ExplosionManager : MonoBehaviour
                 foreach ( long fireRef in resultRefs )
                 {
                     Debug.DrawLine(_firePolys[polyRef].transform.position, _firePolys[fireRef].transform.position, Color.yellow, 5f);
-                    if ( Random.Range(0f, 1f) < 0.8f )
+                    if ( Rand.Range(0f, 1f) < 0.8f )
                         SetFire( fireRef );
                 }
             }

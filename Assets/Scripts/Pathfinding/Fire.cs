@@ -20,7 +20,7 @@ public class Fire : MonoBehaviour
         if ( _lifeTime >= _duration )
             gameObject.SetActive(false);
 
-        if ( Random.Range(0f, 1f) < 0.005f )
+        if ( ExplosionManager.Rand.Range(0f, 1f) < 0.005f )
             ExplosionManager.SetFire( NeiRefs[ Random.Range(0, NeiRefs.Length) ] );
     }
 
