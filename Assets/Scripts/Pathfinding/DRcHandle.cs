@@ -1,5 +1,4 @@
 #if UNITY_EDITOR
-using UnityEditor;
 using UnityEditor.SceneManagement;
 #endif
 using UnityEngine;
@@ -8,6 +7,9 @@ using DotRecast.Detour;
 using DotRecast.Core.Numerics;
 using System.Collections.Generic;
 using System;
+using System.IO;
+using DotRecast.Detour.Io;
+using DotRecast.Core;
 
 public class DRcHandle : MonoBehaviour
 {
@@ -39,12 +41,35 @@ public class DRcHandle : MonoBehaviour
         if (_navMesh == null)
             _navMesh = FindFirstObjectByType<UniRcNavMeshSurface>();
 
-        _navMesh.Bake();
+        NavMeshData = LoadNavMeshFromFile(gameObject.scene.name);
+        
+        if ( NavMeshData == null )
+        {
+            Debug.Log("Nav mesh data was null. ");
+            _navMesh.Bake();
+            NavMeshData = _navMesh.GetNavMeshData();
+        }
+        
 
-        NavMeshData = _navMesh.GetNavMeshData();
         NavQuery = new DtNavMeshQuery(NavMeshData);
-
         Filter = new DtQueryFilter();
+    }
+
+    private DtNavMesh LoadNavMeshFromFile(string fileName)
+    {
+        string fullPath = Path.Combine(Application.dataPath, "..", fileName + ".bytes");
+
+        if ( !File.Exists(fullPath) )
+        {
+            Debug.LogError("Saved navmesh not found: " + fullPath);
+            return null;
+        }
+
+        byte[] navMeshBytes = File.ReadAllBytes(fullPath);
+        RcByteBuffer bb = new RcByteBuffer(navMeshBytes);
+        bb.Order(RcByteOrder.BIG_ENDIAN);
+
+        return new DtMeshSetReader().Read(bb, 5);
     }
 
     #if UNITY_EDITOR

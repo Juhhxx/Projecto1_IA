@@ -6,22 +6,32 @@ using System.Linq;
 using DotRecast.Core.Numerics;
 using DotRecast.Detour;
 using UnityEngine;
+using System.Collections;
+using DotRecast.Core;
 
 public class ExplosionManager : MonoBehaviour
 {
     [SerializeField] private GameObject _firePrefab;
+    [SerializeField] private GameObject _explosionObject;
     [SerializeField] private float _explosionRadius = 5f;
 
     private static Dictionary<long, GameObject> _firePolys = new();
     [SerializeField] private List<Fire> _firePolyList = new();
 
+    
+    private IRcRand _rand;
+
     private void Awake()
     {
+        _rand = new RcRand();
+
+        Debug.Log("Poly list count: " + _firePolyList.Count);
         foreach (Fire fire in _firePolyList)
         {
             _firePolys[fire.PolyRef] = fire.gameObject;
-            Debug.Log( "new fire go: " + _firePolys[fire.PolyRef] );
+            // Debug.Log( "new fire go: " + _firePolys[fire.PolyRef] );
         }
+        Debug.Log("Poly dict count: " + _firePolys.Count);
     }
 
     #if UNITY_EDITOR
@@ -30,50 +40,42 @@ public class ExplosionManager : MonoBehaviour
         _firePolys = new Dictionary<long, GameObject>();
         _firePolyList = new List<Fire>();
 
-        Undo.IncrementCurrentGroup();
+        /*Undo.IncrementCurrentGroup();
         Undo.SetCurrentGroupName("Bake All Fire Objects");
         int group = Undo.GetCurrentGroup();
 
-        Fire[] fireChildren = GetComponentsInChildren<Fire>();
+        Fire[] fireChildren = GetComponentsInChildren<Fire>(true); // true for include inactive
 
         foreach(Fire fire in fireChildren)
-        {
-            Undo.DestroyObjectImmediate(fire.gameObject);
-            DestroyImmediate(fire.gameObject);
-        }
+            Undo.DestroyObjectImmediate(fire.gameObject);*/
 
-        for (int tileIndex = 0; tileIndex < DRcHandle.NavMeshData.GetMaxTiles(); tileIndex++)
+        Debug.Log("Init tile count: " + DRcHandle.NavMeshData.GetTileCount());
+
+        for (int tileIndex = 0; tileIndex < DRcHandle.NavMeshData.GetTileCount(); tileIndex++)
         {
-            var tile = DRcHandle.NavMeshData.GetTile(tileIndex);
+            DtMeshTile tile = DRcHandle.NavMeshData.GetTile(tileIndex);
             if (tile == null || tile.data == null) continue;
 
             for (int polyIndex = 0; polyIndex < tile.data.header.polyCount; polyIndex++)
             {
-                var poly = tile.data.polys[polyIndex];
-                if (poly.GetPolyType() != DtPolyTypes.DT_POLYTYPE_GROUND)
-                    continue;
-
                 long polyRef = DRcHandle.NavMeshData.GetPolyRefBase(tile) | (uint)polyIndex;
-
-                if (_firePolys.ContainsKey(polyRef))
-                    continue;
-
-                GameObject fire = NewFire(polyRef);
-                fire.transform.parent = this.transform; // keep hierarchy clean
-                fire.name = $"Fire_{polyRef}";
-                _firePolys[polyRef] = fire;
+                NewFirePoly(polyRef);
             }
         }
 
-        Undo.CollapseUndoOperations(group);
+        Debug.Log("Final poly count: " + _firePolyList.Count);
+
+        // Undo.CollapseUndoOperations(group);
     }
 
-    public GameObject NewFire(long polyRef)
+    public void NewFire(long polyRef)
     {
-        GameObject newFire =  Instantiate(_firePrefab);
+        GameObject newFire =  Instantiate(_firePrefab, transform); // keep hierarchy clean
+        
+        newFire.name = $"Fire_{polyRef}";
 
         newFire.transform.position =
-            DRcHandle.ToUnityVec3( DRcHandle.NavMeshData.GetPolyCenter(polyRef) );
+            DRcHandle.ToUnityVec3( DRcHandle.NavMeshData.GetPolyCenter(polyRef) ); // we should give it a bit of wiggle here
 
         DRcHandle.NavMeshData.GetTileAndPolyByRef(polyRef, out DtMeshTile tile, out DtPoly poly);
         Fire fire = newFire.GetComponent<Fire>();
@@ -88,55 +90,103 @@ public class ExplosionManager : MonoBehaviour
             {
                 int neighborIndex = nei - 1;
                 long neighborRef = DRcHandle.NavMeshData.GetPolyRefBase(tile) | (uint)neighborIndex;
+
                 neighborRefs.Add(neighborRef);
             }
             else if (nei != 0) // external neis
             {
-                int linkIdx = poly.firstLink;
-                DtLink link = tile.links[linkIdx];
-                if (link.edge == edge && link.refs != 0)
-                    neighborRefs.Add(link.refs);
+                for (int linkIdx = poly.firstLink; linkIdx != -1; linkIdx = tile.links[linkIdx].next)
+                {
+                    long neighborRef = tile.links[linkIdx].refs;
+                    if ( neighborRef != 0 )
+                        neighborRefs.Add(neighborRef);
+                }
             }
         }
 
-        fire.SetNeighborReferences(neighborRefs.ToArray());
-
-        Undo.RegisterCreatedObjectUndo(newFire, "Bake Fire");
+        fire.SetRefs(polyRef, neighborRefs.ToArray());
+        
+        // Debug.Log("polyref: " + fire.PolyRef);
 
         _firePolys[polyRef] = newFire;
-        newFire.SetActive(false);
-
-        fire.PolyRef = polyRef;
         _firePolyList.Add(fire);
 
-        return newFire;
+        foreach (long p in neighborRefs)
+            NewFirePoly(p);
+
+        newFire.SetActive(false);
+
+        // Undo.RegisterCreatedObjectUndo(newFire, "Bake Fire");
+    }
+
+    private void NewFirePoly(long polyRef)
+    {
+        if (_firePolys.ContainsKey(polyRef))
+            return;
+        NewFire(polyRef);
     }
     #endif
 
     private void Update()
     {
-        float per = Random.Range(0f, 1f);
-        if ( per < 0.005f )
+        if ( _explode == null )
         {
-            int random = (int) Random.Range(0, _firePolys.Count -1);
+            float per = Random.Range(0f, 1f);
 
-            Debug.Log("firepolys count: " + _firePolys.Count);
+            if ( per < 0.005f )
+            {
+                // Debug.Log("firepolys count: " + _firePolys.Count);
 
-            Vector3 pos = _firePolys.ElementAt(random).Value.transform.position;
+                DRcHandle.NavQuery.FindRandomPoint(DRcHandle.Filter, _rand, out long polyRef, out RcVec3f centerPos);
 
-            List<long> resultRefs = PolysInCircle( pos, _explosionRadius + per);
+                float radius = _explosionRadius + per;
+                List<long> resultRefs = PolysInCircle( polyRef, centerPos, radius);
+                _explode = StartCoroutine(ExplodeAt(_firePolys[polyRef].transform.position, radius));
 
-            foreach ( long fireRef in resultRefs )
-                if ( Random.Range(0f, 1f) < 0.6f )
-                    SetFire( fireRef );
+                foreach ( long fireRef in resultRefs )
+                {
+                    Debug.DrawLine(_firePolys[polyRef].transform.position, _firePolys[fireRef].transform.position, Color.yellow, 5f);
+                    if ( Random.Range(0f, 1f) < 0.8f )
+                        SetFire( fireRef );
+                }
+            }
         }
     }
 
-    public bool LookForFire(Vector3 position, float radius, out RcVec3f fireSource)
+    private Coroutine _explode;
+    private IEnumerator ExplodeAt(Vector3 pos, float radius)
+    {
+        _explosionObject.SetActive(true);
+        _explosionObject.transform.position = pos;
+        radius *= 2;
+
+        YieldInstruction wfs = new WaitForSeconds(0.01f);
+
+        for ( int i = 0; i <= radius ; i++ )
+        {
+            _explosionObject.transform.localScale = Vector3.one * i;
+            yield return wfs;
+        }
+
+        for ( int i = 0; i < radius ; i++ )
+        {
+            _explosionObject.transform.localScale = Vector3.one * (radius - i);
+            yield return null;
+        }
+
+        _explosionObject.SetActive(false);
+        _explode = null;
+    }
+
+    public bool LookForFire(RcVec3f position, float radius, out RcVec3f fireSource)
     {
         fireSource = RcVec3f.Zero;
 
-        List<long> resultRefs = PolysInCircle(position, radius);
+        DtStatus status = DRcHandle.FindNearest(position, out long startRef, out RcVec3f nearest, out _);
+        if ( status.Failed() )
+            return false;
+
+        List<long> resultRefs = PolysInCircle(startRef, nearest, radius);
 
         foreach ( long polyRef in resultRefs )
             if ( PolyHasFire(polyRef) )
@@ -148,18 +198,13 @@ public class ExplosionManager : MonoBehaviour
         return false;
     }
 
-    public List<long> PolysInCircle(Vector3 position, float radius)
+    public List<long> PolysInCircle(long startRef, RcVec3f nearest, float radius)
     {
-        DtStatus status = DRcHandle.FindNearest(DRcHandle.ToDotVec3(position), out long startRef, out RcVec3f nearest, out _);
-
-        if ( status.Failed() )
-            return null;
-
         List<long> resultRefs = new List<long>();
         List<long> resultParents = new List<long>();
         List<float> resultCosts = new List<float>();
 
-        status = DRcHandle.NavQuery.FindPolysAroundCircle (
+        DtStatus status = DRcHandle.NavQuery.FindPolysAroundCircle (
             startRef,
             nearest,
             radius,
@@ -199,7 +244,8 @@ public class ExplosionManager : MonoBehaviour
             return true;
         }
 
+        
         Debug.LogWarning("Fire not already baked, polyRef: " + polyRef);
-        return true;
+        return false;
     }
 }

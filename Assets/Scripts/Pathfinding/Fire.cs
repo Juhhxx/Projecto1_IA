@@ -3,10 +3,11 @@ using UnityEngine;
 public class Fire : MonoBehaviour
 {
     [SerializeField] private float _duration;
-    private float _lifeTime;
-    public long PolyRef;
 
-    [field:SerializeField] public long[] neiRefs { get; private set; }
+    [field:SerializeField] public long PolyRef { get; private set; }
+    [field:SerializeField] public long[] NeiRefs { get; private set; }
+
+    private float _lifeTime;
 
     private void OnEnable()
     {
@@ -20,11 +21,14 @@ public class Fire : MonoBehaviour
             gameObject.SetActive(false);
 
         if ( Random.Range(0f, 1f) < 0.005f )
-            ExplosionManager.SetFire( neiRefs[ Random.Range(0, neiRefs.Length-1) ] );
+            ExplosionManager.SetFire( NeiRefs[ Random.Range(0, NeiRefs.Length) ] );
     }
 
-    public void SetNeighborReferences(long[] refs)
+    #if UNITY_EDITOR
+    public void SetRefs(long selfRef, long[] neiRefs)
     {
-        neiRefs = refs;
+        PolyRef = selfRef;
+        NeiRefs = neiRefs;
     }
+    #endif
 }
