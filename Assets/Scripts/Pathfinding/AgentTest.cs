@@ -6,6 +6,8 @@ using UnityEngine;
 public class AgentTest : MonoBehaviour
 {
     [SerializeField] private Renderer _boundBox; // for debug, remove later
+    private IList<Vector3> Path = new List<Vector3>();
+
     private void Start()
     {
         transform.position = SnapToNavMesh(transform.position);
@@ -23,7 +25,7 @@ public class AgentTest : MonoBehaviour
         Debug.DrawLine(transform.position, randomEnd, Color.yellow, float.MaxValue);
 
         // Find path
-        Path = DotRecastHandle.FindPath(transform.position, randomEnd);
+        Path = DRcHandle.FindPath(transform.position, randomEnd);
 
         Vector3 last = Path[0];
         foreach ( Vector3 vec in Path)
@@ -51,14 +53,12 @@ public class AgentTest : MonoBehaviour
 
     public static Vector3 SnapToNavMesh(Vector3 position)
     {
-        RcVec3f rc = DotRecastHandle.ToDotVec3(position);
-        DotRecastHandle.FindNearest(rc, out _, out var nearest, out _);
+        RcVec3f rc = DRcHandle.ToDotVec3(position);
+        DRcHandle.FindNearest(rc, out _, out var nearest, out _);
 
         return new Vector3(nearest.X, nearest.Y, nearest.Z);
     }
 
-
-    private IList<Vector3> Path = new List<Vector3>();
     private void OnDrawGizmos()
     {
         if ( Path == null || Path.Count == 0 ) return;
