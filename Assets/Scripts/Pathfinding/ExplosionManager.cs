@@ -1,6 +1,3 @@
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
 using System.Collections.Generic;
 using System.Linq;
 using DotRecast.Core.Numerics;
@@ -13,7 +10,9 @@ public class ExplosionManager : MonoBehaviour
 {
     [SerializeField] private GameObject _firePrefab;
     [SerializeField] private GameObject _explosionObject;
-    [SerializeField] private float _explosionRadius = 5f;
+    [SerializeField] private float _radius = 20f, _radiusDeviation = 3f, _fireChance = 0.5f;
+    [SerializeField] private int _RunFireEveryFrame = 2;
+    [SerializeField] private float _explosionChancePerFrame = 0.001f;
 
     private static Dictionary<long, GameObject> _firePolys = new();
     [SerializeField] private List<Fire> _firePolyList = new();
@@ -130,31 +129,33 @@ public class ExplosionManager : MonoBehaviour
 
     private void Update()
     {
-        if ( _explode == null )
+        // run fire update only every _RunFireEveryFrame frames
+        if (Time.frameCount % _RunFireEveryFrame != 0)
+            return;
+
+        if ( Rand.Range(0f, 1f) < _explosionChancePerFrame )
         {
-            float per = Rand.Range(0f, 1f);
+            // Debug.Log("firepolys count: " + _firePolys.Count);
 
-            if ( per < 0.005f )
+            DRcHandle.NavQuery.FindRandomPoint(DRcHandle.Filter, Rand as IRcRand, out long polyRef, out RcVec3f centerPos);
+
+            float radius = _radius + Rand.Range(-_radiusDeviation, _radiusDeviation);;
+            List<long> resultRefs = PolysInCircle( polyRef, centerPos, radius);
+            StartCoroutine(ExplodeAt(_firePolys[polyRef].transform.position, radius));
+
+            foreach ( long fireRef in resultRefs )
             {
-                // Debug.Log("firepolys count: " + _firePolys.Count);
-
-                DRcHandle.NavQuery.FindRandomPoint(DRcHandle.Filter, Rand as IRcRand, out long polyRef, out RcVec3f centerPos);
-
-                float radius = _explosionRadius + per;
-                List<long> resultRefs = PolysInCircle( polyRef, centerPos, radius);
-                _explode = StartCoroutine(ExplodeAt(_firePolys[polyRef].transform.position, radius));
-
-                foreach ( long fireRef in resultRefs )
-                {
-                    Debug.DrawLine(_firePolys[polyRef].transform.position, _firePolys[fireRef].transform.position, Color.yellow, 5f);
-                    if ( Rand.Range(0f, 1f) < 0.8f )
-                        SetFire( fireRef );
-                }
+                Debug.DrawLine(_firePolys[polyRef].transform.position, _firePolys[fireRef].transform.position, Color.yellow, 5f);
+                if ( Rand.Range(0f, 1f) < _fireChance )
+                    SetFire( fireRef );
             }
         }
+
+        foreach ( Fire fire in _firePolyList )
+            if ( fire.gameObject.activeSelf )
+                fire.OrderedUpdate();
     }
 
-    private Coroutine _explode;
     private IEnumerator ExplodeAt(Vector3 pos, float radius)
     {
         _explosionObject.SetActive(true);
@@ -176,7 +177,6 @@ public class ExplosionManager : MonoBehaviour
         }
 
         _explosionObject.SetActive(false);
-        _explode = null;
     }
 
     public bool LookForFire(RcVec3f position, float radius, out RcVec3f fireSource)

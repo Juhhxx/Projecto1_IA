@@ -6,6 +6,7 @@ public class Fire : MonoBehaviour
 
     [field:SerializeField] public long PolyRef { get; private set; }
     [field:SerializeField] public long[] NeiRefs { get; private set; }
+    [SerializeField] private float _firePropagation = 0.005f;
 
     private float _lifeTime;
 
@@ -14,13 +15,13 @@ public class Fire : MonoBehaviour
         _lifeTime = 0f;
     }
 
-    private void Update()
+    public void OrderedUpdate()
     {
         _lifeTime += Time.deltaTime;
         if ( _lifeTime >= _duration )
             gameObject.SetActive(false);
 
-        if ( ExplosionManager.Rand.Range(0f, 1f) < 0.005f )
+        if ( ExplosionManager.Rand.Range(0f, 1f) < _firePropagation )
             ExplosionManager.SetFire( NeiRefs[ ExplosionManager.Rand.Range(0, NeiRefs.Length) ] );
     }
 
