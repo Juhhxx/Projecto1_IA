@@ -21,7 +21,7 @@ public class Fire : MonoBehaviour
             gameObject.SetActive(false);
 
         if ( ExplosionManager.Rand.Range(0f, 1f) < 0.005f )
-            ExplosionManager.SetFire( NeiRefs[ Random.Range(0, NeiRefs.Length) ] );
+            ExplosionManager.SetFire( NeiRefs[ ExplosionManager.Rand.Range(0, NeiRefs.Length) ] );
     }
 
     #if UNITY_EDITOR
