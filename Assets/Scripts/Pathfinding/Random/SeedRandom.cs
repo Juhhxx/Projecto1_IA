@@ -4,14 +4,13 @@ using UnityEngine;
 [Serializable]
 public class SeedRandom : ISeedRandom
 {
-    public GameObject Owner { get; set; }
-    public int ID { get; set; }
-    public System.Random Random { get; set; }
-
+    public GameObject Owner { get; private set; }
+    public int ID { get; private set; }
+    public System.Random Random { get; private set; }
     public SeedRandom(GameObject owner)
     {
         Owner = owner;
-        RandomManager.Instance.RegisterStream(this);
+        (ID, Random) = RandomManager.Instance.RegisterStream(this);
     }
 
     public int Range(int minInclusive, int maxExclusive)

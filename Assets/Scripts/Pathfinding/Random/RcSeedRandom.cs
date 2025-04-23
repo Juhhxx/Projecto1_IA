@@ -5,14 +5,13 @@ using UnityEngine;
 [Serializable]
 public class RcSeedRandom : IRcRand, ISeedRandom
 {
-    public GameObject Owner { get; set; }
-    public int ID { get; set; }
-    public System.Random Random { get; set; }
-
+    public GameObject Owner { get; private set; }
+    public int ID { get; private set; }
+    public System.Random Random { get; private set; }
     public RcSeedRandom(GameObject owner)
     {
         Owner = owner;
-        RandomManager.Instance.RegisterStream(this);
+        (ID, Random) = RandomManager.Instance.RegisterStream(this);
     }
 
     public float Next()

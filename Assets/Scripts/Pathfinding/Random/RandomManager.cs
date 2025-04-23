@@ -22,30 +22,25 @@ public class RandomManager : MonoBehaviour
         Instance = this;
     }
 
-    public void RegisterStream(ISeedRandom stream)
+    public (int, System.Random) RegisterStream(ISeedRandom stream)
     {
-        if (!_streams.Contains(stream))
+        // int ID = stream.Owner.transform.hierarchyCapacity ^ stream.Owner.transform.GetSiblingIndex();
+        int ID = stream.Owner.transform.hierarchyCapacity;
+
+        Transform t = stream.Owner.transform;
+        string path = t.name;
+
+        while ( t.parent != null )
         {
-            // int ID = stream.Owner.transform.hierarchyCapacity ^ stream.Owner.transform.GetSiblingIndex();
-            int ID = stream.Owner.transform.hierarchyCapacity;
-
-            Transform t = stream.Owner.transform;
-            string path = t.name;
-
-            while ( t.parent != null )
-            {
-                t = t.parent;
-                path = t.name + "/" + path;
-            }
-            foreach (char c in path)
-                ID = ID * 31 + c;
-
-            stream.ID = ID;
-
-            stream.Random = new System.Random(BaseSeed ^ stream.ID);
-            _streams.Add(stream);
+            t = t.parent;
+            path = t.name + "/" + path;
         }
+        foreach (char c in path)
+            ID = ID * 31 + c;
 
+        _streams.Add(stream);
+        
         Debug.Log("Registered new stream: " + stream);
+        return (ID, new System.Random(BaseSeed ^ stream.ID));
     }
 }
