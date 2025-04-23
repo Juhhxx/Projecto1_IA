@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using DotRecast.Core.Numerics;
+using Scripts.Pathfinding;
+using Scripts.Random;
 using UnityEngine;
 
 public class AgentTest : MonoBehaviour
@@ -13,7 +15,6 @@ public class AgentTest : MonoBehaviour
     private void Awake()
     {
         _rand = new SeedRandom(gameObject);
-        Debug.Log("This is RcRand: " + _rand.Range(0f, 40f));
     }
 
     private void Start()
