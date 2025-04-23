@@ -1,13 +1,17 @@
 using UnityEngine;
+using NaughtyAttributes;
 
 namespace Scripts.AI.FSMs.UnityIntegration
 {
     public class StateMachineRunner : MonoBehaviour
     {
-        [SerializeField] private StateMachineCreator _stateMachine;
+        [Expandable][SerializeField] private StateMachineCreator _stateMachineModel;
+        [Expandable][SerializeField] private StateMachineCreator _stateMachine;
 
         private void Start()
         {
+            _stateMachine = _stateMachineModel.CreateStateMachine();
+            
             _stateMachine.SetObjectReference(gameObject);
             _stateMachine.InstantiateStateMachine();
         }

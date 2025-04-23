@@ -9,7 +9,6 @@ namespace Scripts.AI
     [CreateAssetMenu(fileName = "StateExample", menuName = "State Machines/StateExample")]
     public class StateExample : StateAbstract
     {
-        public string Name;
         protected override void EntryAction()
         {
             Debug.Log($"Start State {Name}");

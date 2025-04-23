@@ -18,5 +18,6 @@ namespace Scripts.AI.FSMs.UnityIntegration
         protected abstract void Action();
         protected abstract bool Condition();
         public abstract void IntantiateTransition();
+        public TransitionAbstract CreateTransition() => Instantiate(this);
     }
 }

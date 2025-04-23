@@ -44,6 +44,61 @@ namespace Scripts.AI.FSMs.UnityIntegration
         {
             _stateMachine.Update()?.Invoke();
         }
+        public StateMachineCreator CreateStateMachine()
+        {
+            Dictionary<string,ScriptableObject> instances = new Dictionary<string,ScriptableObject>();
+            StateMachineCreator newSM = Instantiate(this);
+
+            newSM.InitialState = InitialState.CreateState();
+            instances.Add(newSM.InitialState.Name,newSM.InitialState);
+
+            newSM.StateTransitions = new List<StateTransition>();
+
+            foreach (StateTransition st in StateTransitions)
+            {
+                StateAbstract state;
+                List<TransitionAbstract> transitions = new List<TransitionAbstract>();
+
+                if (instances.ContainsKey(st.State.Name))
+                {
+                    state = instances[st.State.Name] as StateAbstract;
+                }
+                else
+                {
+                    state = st.State.CreateState();
+                    instances.Add(st.State.Name,state);
+                }
+
+                foreach (TransitionAbstract t in st.Transitions)
+                {
+                    if (instances.ContainsKey(t.Name))
+                    {
+                        transitions.Add(instances[t.Name] as TransitionAbstract);
+                    }
+                    else
+                    {
+                        TransitionAbstract transition = t.CreateTransition();
+                        
+                        if (instances.ContainsKey(t.ToState.Name))
+                        {
+                            transition.ToState = instances[t.ToState.Name] as StateAbstract;
+                        }
+                        else
+                        {
+                            instances.Add(t.ToState.Name,t.ToState.CreateState());
+                            transition.ToState = instances[t.ToState.Name] as StateAbstract;
+                        }
+
+                        transitions.Add(transition);
+                    }
+                }
+
+                StateTransition newST = new StateTransition(state,transitions);
+                newSM.StateTransitions.Add(newST);
+            }
+
+            return newSM;
+        }
     }
 }
 

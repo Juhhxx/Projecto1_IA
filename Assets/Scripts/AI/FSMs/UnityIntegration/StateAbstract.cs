@@ -6,6 +6,7 @@ namespace Scripts.AI.FSMs.UnityIntegration
 {
     public abstract class StateAbstract : ScriptableObject
     {
+        public string Name;
         protected State state;
         public State State => state;
         protected GameObject objectReference;
@@ -18,6 +19,7 @@ namespace Scripts.AI.FSMs.UnityIntegration
         protected abstract void StateAction();
         protected abstract void ExitAction();
         public abstract void InstantiateState();
+        public StateAbstract CreateState() => Instantiate(this);
     }
 }
  

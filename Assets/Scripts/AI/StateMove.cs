@@ -11,7 +11,6 @@ namespace Scripts.AI
     {
         private GameObject  gameObject;
         private Transform   transform;
-        public string Name;
         protected override void EntryAction()
         {
             Debug.Log($"Start State {Name}");
@@ -19,6 +18,7 @@ namespace Scripts.AI
         protected override void StateAction()
         {
             Debug.Log($"Doing State {transform.position}");
+            transform.position += new Vector3(1f,0f,0f);
         }
         protected override void ExitAction()
         {
@@ -31,6 +31,7 @@ namespace Scripts.AI
 
             base.state = new State(Name,EntryAction,StateAction,ExitAction);
         }
+
     }
 }
     

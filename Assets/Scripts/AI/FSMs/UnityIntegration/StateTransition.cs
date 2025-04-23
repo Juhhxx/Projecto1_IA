@@ -11,5 +11,11 @@ namespace Scripts.AI.FSMs.UnityIntegration
         public StateAbstract State;
         [Expandable]
         public List<TransitionAbstract> Transitions;
+
+        public StateTransition(StateAbstract state, List<TransitionAbstract> trans)
+        {
+            State = state;
+            Transitions = trans;
+        }
     }
 }
