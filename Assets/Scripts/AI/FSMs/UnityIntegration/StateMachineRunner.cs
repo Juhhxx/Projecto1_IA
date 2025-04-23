@@ -6,7 +6,7 @@ namespace Scripts.AI.FSMs.UnityIntegration
     public class StateMachineRunner : MonoBehaviour
     {
         [Expandable][SerializeField] private StateMachineCreator _stateMachineModel;
-        [Expandable][SerializeField] private StateMachineCreator _stateMachine;
+        private StateMachineCreator _stateMachine;
 
         private void Start()
         {

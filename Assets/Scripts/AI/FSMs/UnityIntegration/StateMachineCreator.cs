@@ -25,6 +25,7 @@ namespace Scripts.AI.FSMs.UnityIntegration
             {
                 foreach (TransitionAbstract t in st.Transitions)
                 {
+                    t.SetObjectReference(_objectReference);
                     if (t.Transition == null) t.IntantiateTransition();
                     st.State.AddTransitions(t);
                 }

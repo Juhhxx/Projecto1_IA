@@ -10,10 +10,10 @@ namespace Scripts.AI.FSMs.UnityIntegration
         protected Transition transition;
         public Transition Transition => transition;
         public StateAbstract ToState;
-        public bool IsTriggered()
-        {
-            return transition.IsTriggered();
-        }
+        protected GameObject objectReference;
+
+        public bool IsTriggered() => transition.IsTriggered();
+        public void SetObjectReference(GameObject go) => objectReference = go;
 
         protected abstract void Action();
         protected abstract bool Condition();
