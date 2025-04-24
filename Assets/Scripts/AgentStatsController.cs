@@ -31,7 +31,9 @@ namespace Scripts
         public Color TiredColor => _tiredColor;
         private Coroutine _changeHunger;
         private Coroutine _changeEnergy;
-        private YieldInstruction _wfsDepleation;
+        private Coroutine _updateStats;
+        private YieldInstruction _wfsChange;
+        private YieldInstruction _wfsUpdate;
 
         // Other Variables
         private Color _normalColor;
@@ -44,9 +46,11 @@ namespace Scripts
             _renderer       = GetComponentInChildren<Renderer>();
             _normalColor    = _renderer.material.color;
             _random         = new SeedRandom(gameObject);
-            _wfsDepleation  = new WaitForSeconds(_depleationSpeed);
-            _hungerLevel = _maxHunger;
-            _energyLevel = _maxEnergy;
+            _wfsChange      = new WaitForSeconds(_depleationSpeed);
+            _wfsUpdate      = new WaitForSeconds(1f);
+            _hungerLevel    = _maxHunger;
+            _energyLevel    = _maxEnergy;
+
             StartDepletingHunger();
             StartDepletingEnergy();
         }
@@ -63,10 +67,10 @@ namespace Scripts
                 if (_random.Range(0f,1f) < 0.5f)
                 {
                     if (subtract)   _hungerLevel -= _hungerDepleationRate;
-                    else            _hungerLevel += _hungerDepleationRate;
+                    else            _hungerLevel += _hungerDepleationRate * 2;
                 }
 
-                yield return _wfsDepleation;
+                yield return _wfsChange;
 
                 if (!subtract && !parameter) _agentStat = AgentStat.Normal;
 
@@ -88,10 +92,10 @@ namespace Scripts
                 if (_random.Range(0f,1f) < 0.5f)
                 {
                     if (subtract)   _energyLevel -= _energyDepleationRate;
-                    else            _energyLevel += _energyDepleationRate;
+                    else            _energyLevel += _energyDepleationRate * 2;
                 }
 
-                yield return _wfsDepleation;
+                yield return _wfsChange;
 
                 if (subtract)   parameter = _energyLevel > 0;
                 else            parameter = _energyLevel < _maxEnergy;
@@ -123,25 +127,32 @@ namespace Scripts
                 if (_changeEnergy == null) _changeEnergy = StartCoroutine(ChangeEnergy(false));
             }
         }
-
         public void UpdateStats()
         {
-            if (_hungerLevel <= _maxHunger/2)
+            if (_updateStats == null) _updateStats = StartCoroutine(UpdateStatsCoroutine());
+        }
+        private IEnumerator UpdateStatsCoroutine()
+        {
+            while (AgentStat == AgentStat.Normal)
             {
-                if (_random.Range(0f,1f) < (0.6f - (_hungerLevel/_maxHunger)))
+                if (_hungerLevel <= _maxHunger/2)
                 {
-                    _agentStat = AgentStat.Hungry;
-                    return;
+                    if (_random.Range(0f,1f) < (0.6f - (_hungerLevel/_maxHunger)))
+                    {
+                        _agentStat = AgentStat.Hungry;
+                    }
                 }
-            }
+                else if (_energyLevel <= _maxEnergy/2)
+                {
+                    if (_random.Range(0f,1f) < (0.6f - (_energyLevel/_maxEnergy)))
+                    {
+                        _agentStat = AgentStat.Tired;
+                    }
+                }
 
-            if (_energyLevel <= _maxEnergy/2)
-            {
-                if (_random.Range(0f,1f) < (0.6f - (_energyLevel/_maxEnergy)))
-                {
-                    _agentStat = AgentStat.Tired;
-                }
+                yield return _wfsUpdate;
             }
+            _updateStats = null;
         }
         public void ChangeColor(Color color)
         {
