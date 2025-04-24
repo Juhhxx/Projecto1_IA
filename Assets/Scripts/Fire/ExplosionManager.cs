@@ -7,16 +7,18 @@ using System.Collections;
 using DotRecast.Core;
 using Scripts.Pathfinding;
 using Scripts.Random;
+using UnityEditor;
+using UnityEngine.Profiling;
 
 namespace Scripts.Fire
 {
-    public class ExplosionManager : MonoBehaviour
+    public class ExplosionManager : Manager
     {
         [SerializeField] private DRcHandle _handle;
         [SerializeField] private GameObject _firePrefab;
         [SerializeField] private GameObject _explosionObject;
         [SerializeField] private float _radius = 20f, _radiusDeviation = 3f, _fireChance = 0.5f;
-        [SerializeField] private int _RunFireEveryFrame = 2;
+        [SerializeField] private int _FirePerUpdateBatch = 2;
         [SerializeField] private float _explosionChancePerFrame = 0.001f;
 
         private static Dictionary<long, GameObject> _firePolys = new();
@@ -26,8 +28,10 @@ namespace Scripts.Fire
         
         public static ISeedRandom Rand { get; private set; }
 
-        private void Awake()
+        internal protected override void AwakeOrdered()
         {
+            _FirePerUpdateBatch = _firePolyList.Count / _FirePerUpdateBatch;
+
             if ( _handle == null )
                 _handle = FindFirstObjectByType<DRcHandle>();
 
@@ -43,7 +47,7 @@ namespace Scripts.Fire
         }
 
         #if UNITY_EDITOR
-        public void EditorBakeFirePolys()
+        internal protected override void Bake()
         {
             _firePolys = new Dictionary<long, GameObject>();
             _firePolyList = new List<Fire>();
@@ -56,6 +60,9 @@ namespace Scripts.Fire
 
             foreach(Fire fire in fireChildren)
                 Undo.DestroyObjectImmediate(fire.gameObject);*/
+
+            while (transform.childCount > 0)
+                DestroyImmediate(transform.GetChild(0));
 
             Debug.Log("Init tile count: " + _handle.NavMeshData.GetTileCount());
 
@@ -78,7 +85,7 @@ namespace Scripts.Fire
 
         private void NewFire(long polyRef)
         {
-            GameObject newFire =  Instantiate(_firePrefab, transform); // keep hierarchy clean
+            GameObject newFire = (GameObject) PrefabUtility.InstantiatePrefab(_firePrefab, transform); // keep hierarchy clean
             
             newFire.name = $"Fire_{polyRef}";
 
@@ -135,17 +142,19 @@ namespace Scripts.Fire
         }
         #endif
 
-        private void Update()
+        internal protected override void UpdateOrdered()
         {
-            // run fire update only every _RunFireEveryFrame frames
-            if (Time.frameCount % _RunFireEveryFrame != 0)
+            if (Time.frameCount % 3 != 0) // run every 3 frames
                 return;
+
+            Profiler.BeginSample("DRC ExplosionManager");
+            // run fire update only every _RunFireEveryFrame frames
 
             if ( Rand.Range(0f, 1f) < _explosionChancePerFrame )
             {
-                // Debug.Log("firepolys count: " + _firePolys.Count);
-
                 DRcHandle.NavQuery.FindRandomPoint(DRcHandle.Filter, Rand as IRcRand, out long polyRef, out RcVec3f centerPos);
+
+                Debug.Log("Exploding " + polyRef + "!");
 
                 float radius = _radius + Rand.Range(-_radiusDeviation, _radiusDeviation);;
                 List<long> resultRefs = PolysInCircle( polyRef, centerPos, radius);
@@ -160,10 +169,33 @@ namespace Scripts.Fire
                 }
             }
 
+            int offset = Time.frameCount % _FirePerUpdateBatch;
+
+            for (int i = offset; i < _firePolyList.Count; i += _FirePerUpdateBatch)
+                if ( _firePolyList[i].gameObject.activeSelf )
+                    _firePolyList[i].UpdateOrdered();
+        }
+
+        private void Update()
+        {
+            if (Time.frameCount % 3 != 0) // run every 3 frames
+                return;
+            
+            Profiler.BeginSample("DRC ExplosionManager Graphics");
+
+            _fireMatrices.Clear();
+
             foreach ( Fire fire in _firePolyList )
                 if ( fire.gameObject.activeSelf )
-                    fire.OrderedUpdate();
+                    _fireMatrices.Add(fire.Matrix);
+
+            Graphics.DrawMeshInstanced(_fireMesh, 0, _fireMaterial, _fireMatrices);
         }
+
+        [SerializeField] private Mesh _fireMesh;
+        [SerializeField] private Material _fireMaterial;
+        [SerializeField] private List<Matrix4x4> _fireMatrices = new();
+
 
         private IEnumerator ExplodeAt(Vector3 pos, float radius)
         {
@@ -251,7 +283,7 @@ namespace Scripts.Fire
                 return false;
             }
 
-            Debug.LogWarning("Poly not already baked, polyRef: " + polyRef);
+            Debug.LogWarning("Poly not already baked, polyRef: " + polyRef + " _firePolys count: " + _firePolys.Count);
             return false;
         }
 
@@ -267,7 +299,7 @@ namespace Scripts.Fire
             }
 
             
-            Debug.LogWarning("Fire not already baked, polyRef: " + polyRef);
+            Debug.LogWarning("Fire not already baked, polyRef: " + polyRef + " _firePolys count: " + _firePolys.Count);
             return false;
         }
     }

@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Scripts.Random
 {
-    public class RandomManager : MonoBehaviour
+    public class RandomManager : Manager
     {
         [field:SerializeField] public int BaseSeed { get; private set; } = 12345;
 
@@ -11,7 +11,7 @@ namespace Scripts.Random
 
         public static RandomManager Instance { get; private set; }
 
-        private void Awake()
+        internal protected override void AwakeOrdered()
         {
             _streams = new List<ISeedRandom>();
 
@@ -44,5 +44,9 @@ namespace Scripts.Random
         
             return (ID, new System.Random(BaseSeed ^ stream.ID));
         }
+
+        internal protected override void UpdateOrdered() {}
+
+        internal protected override void Bake() {}
     }
 }

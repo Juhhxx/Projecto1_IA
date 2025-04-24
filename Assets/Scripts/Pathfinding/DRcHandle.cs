@@ -11,16 +11,18 @@ using System.IO;
 using DotRecast.Detour.Io;
 using DotRecast.Core;
 using Scripts.Pathfinding.DotRecast;
-using Scripts.Fire;
+using UnityEngine.Profiling;
 
 namespace Scripts.Pathfinding
 {
-    public class DRcHandle : MonoBehaviour
+    public class DRcHandle : Manager
     {
 
         [SerializeField] private UniRcNavMeshSurface _navMesh;
         [SerializeField] private float _agentHeight = 2f, _agentRadius = 0.6f;
         [SerializeField] private Vector3 _snapBoxSize;
+
+        [SerializeField] private Manager[] _managers;
 
         private static RcVec3f _snapSize;
         private static RcVec3f _agentSize;
@@ -57,6 +59,9 @@ namespace Scripts.Pathfinding
 
             NavQuery = new DtNavMeshQuery(NavMeshData);
             Filter = new DtQueryDefaultFilter();
+
+            foreach ( Manager m in _managers )
+                m.AwakeOrdered();
         }
 
         private DtNavMesh LoadNavMeshFromFile(string fileName)
@@ -78,7 +83,7 @@ namespace Scripts.Pathfinding
 
         #if UNITY_EDITOR
         [ContextMenu("Bake NavMesh and Fire Polys Into Scene")]
-        public void EditorBakeNavMeshAndFire()
+        public void EditorBake()
         {
             if (_navMesh == null)
             {
@@ -96,15 +101,20 @@ namespace Scripts.Pathfinding
             NavQuery = new DtNavMeshQuery(NavMeshData);
             Filter = new DtQueryDefaultFilter();
 
-            ExplosionManager fireManager = FindFirstObjectByType<ExplosionManager>();
-            if (fireManager != null)
-                fireManager.EditorBakeFirePolys();
-            else
-                Debug.LogWarning("explosion manager not found" );
+            foreach ( Manager m in _managers )
+                m.Bake();
 
             EditorSceneManager.MarkSceneDirty(gameObject.scene);
         }
         #endif
+
+        private void Update()
+        {
+            Profiler.BeginSample("DRC HANDLE");
+
+            foreach ( Manager m in _managers )
+                m.UpdateOrdered();
+        }
 
         public static DtStatus FindNearest(RcVec3f center, out long nearestRef, out RcVec3f nearestPt, out bool isOverPoly)
         {
@@ -164,5 +174,16 @@ namespace Scripts.Pathfinding
         /// <returns> translated rc vec 3f </returns>
         public static Vector3 ToUnityVec3(RcVec3f vec) => new Vector3(-vec.X, vec.Y, vec.Z);
         public static RcVec3f ToDotVec3(Vector3 vec) => new RcVec3f(-vec.x, vec.y, vec.z);
+        public static Quaternion ToDotQuat(RcVec3f vec)
+        {
+            Vector3 dir = ToUnityVec3(vec);
+            return Quaternion.LookRotation(dir, Vector3.up);
+        }
+
+        internal protected override void AwakeOrdered() {}
+
+        internal protected override void Bake() {}
+
+        internal protected override void UpdateOrdered() {}
     }
 }
