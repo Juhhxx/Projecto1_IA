@@ -26,7 +26,7 @@ namespace Scripts.Pathfinding
         private static RcVec3f _agentSize;
 
         public static DtNavMeshQuery NavQuery { get; private set; }
-        public static DtNavMesh NavMeshData { get; private set; }
+        public DtNavMesh NavMeshData { get; private set; }
 
         public static IDtQueryFilter Filter { get; private set; }
 
@@ -39,7 +39,7 @@ namespace Scripts.Pathfinding
             _snapSize = new RcVec3f(_snapBoxSize.x, _snapBoxSize.y, _snapBoxSize.z);
             _agentSize = new RcVec3f(_agentRadius, _agentHeight, _agentRadius);
 
-            _heuristic = new DtQueryHeuristic();
+            _heuristic = new DtQueryRegularHeuristic();
             _options = new DtFindPathOption(_heuristic, 0, float.MaxValue);
 
             if (_navMesh == null)
@@ -56,7 +56,7 @@ namespace Scripts.Pathfinding
             
 
             NavQuery = new DtNavMeshQuery(NavMeshData);
-            Filter = new DtQueryFilter();
+            Filter = new DtQueryDefaultFilter();
         }
 
         private DtNavMesh LoadNavMeshFromFile(string fileName)
@@ -94,7 +94,7 @@ namespace Scripts.Pathfinding
 
             NavMeshData = _navMesh.GetNavMeshData();
             NavQuery = new DtNavMeshQuery(NavMeshData);
-            Filter = new DtQueryFilter();
+            Filter = new DtQueryDefaultFilter();
 
             ExplosionManager fireManager = FindFirstObjectByType<ExplosionManager>();
             if (fireManager != null)

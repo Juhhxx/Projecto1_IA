@@ -12,6 +12,7 @@ namespace Scripts.Fire
 {
     public class ExplosionManager : MonoBehaviour
     {
+        [SerializeField] private DRcHandle _handle;
         [SerializeField] private GameObject _firePrefab;
         [SerializeField] private GameObject _explosionObject;
         [SerializeField] private float _radius = 20f, _radiusDeviation = 3f, _fireChance = 0.5f;
@@ -20,12 +21,16 @@ namespace Scripts.Fire
 
         private static Dictionary<long, GameObject> _firePolys = new();
         [SerializeField] private List<Fire> _firePolyList = new();
+        public RcVec3f LatestExplosion { get; private set; }
 
         
         public static ISeedRandom Rand { get; private set; }
 
         private void Awake()
         {
+            if ( _handle == null )
+                _handle = FindFirstObjectByType<DRcHandle>();
+
             Rand = new RcSeedRandom(gameObject);
 
             Debug.Log("Poly list count: " + _firePolyList.Count);
@@ -52,16 +57,16 @@ namespace Scripts.Fire
             foreach(Fire fire in fireChildren)
                 Undo.DestroyObjectImmediate(fire.gameObject);*/
 
-            Debug.Log("Init tile count: " + DRcHandle.NavMeshData.GetTileCount());
+            Debug.Log("Init tile count: " + _handle.NavMeshData.GetTileCount());
 
-            for (int tileIndex = 0; tileIndex < DRcHandle.NavMeshData.GetTileCount(); tileIndex++)
+            for (int tileIndex = 0; tileIndex < _handle.NavMeshData.GetTileCount(); tileIndex++)
             {
-                DtMeshTile tile = DRcHandle.NavMeshData.GetTile(tileIndex);
+                DtMeshTile tile = _handle.NavMeshData.GetTile(tileIndex);
                 if (tile == null || tile.data == null) continue;
 
                 for (int polyIndex = 0; polyIndex < tile.data.header.polyCount; polyIndex++)
                 {
-                    long polyRef = DRcHandle.NavMeshData.GetPolyRefBase(tile) | (uint)polyIndex;
+                    long polyRef = _handle.NavMeshData.GetPolyRefBase(tile) | (uint)polyIndex;
                     NewFirePoly(polyRef);
                 }
             }
@@ -78,9 +83,9 @@ namespace Scripts.Fire
             newFire.name = $"Fire_{polyRef}";
 
             newFire.transform.position =
-                DRcHandle.ToUnityVec3( DRcHandle.NavMeshData.GetPolyCenter(polyRef) ); // we should give it a bit of wiggle here
+                DRcHandle.ToUnityVec3( _handle.NavMeshData.GetPolyCenter(polyRef) ); // we should give it a bit of wiggle here
 
-            DRcHandle.NavMeshData.GetTileAndPolyByRef(polyRef, out DtMeshTile tile, out DtPoly poly);
+            _handle.NavMeshData.GetTileAndPolyByRef(polyRef, out DtMeshTile tile, out DtPoly poly);
             Fire fire = newFire.GetComponent<Fire>();
 
             IList<long> neighborRefs = new List<long>();
@@ -92,7 +97,7 @@ namespace Scripts.Fire
                 if (nei != 0 && (nei & 0x8000) == 0) // internal neis
                 {
                     int neighborIndex = nei - 1;
-                    long neighborRef = DRcHandle.NavMeshData.GetPolyRefBase(tile) | (uint)neighborIndex;
+                    long neighborRef = _handle.NavMeshData.GetPolyRefBase(tile) | (uint)neighborIndex;
 
                     neighborRefs.Add(neighborRef);
                 }
@@ -144,6 +149,7 @@ namespace Scripts.Fire
 
                 float radius = _radius + Rand.Range(-_radiusDeviation, _radiusDeviation);;
                 List<long> resultRefs = PolysInCircle( polyRef, centerPos, radius);
+                LatestExplosion = centerPos;
                 StartCoroutine(ExplodeAt(_firePolys[polyRef].transform.position, radius));
 
                 foreach ( long fireRef in resultRefs )
@@ -202,7 +208,7 @@ namespace Scripts.Fire
             foreach ( long polyRef in resultRefs )
                 if ( PolyHasFire(polyRef) )
                 {
-                    fireSource = DRcHandle.NavMeshData.GetPolyCenter(polyRef);
+                    fireSource = _handle.NavMeshData.GetPolyCenter(polyRef);
                     return true;
                 }
 
@@ -236,7 +242,7 @@ namespace Scripts.Fire
         /// </summary>
         /// <param name="polyRef"></param>
         /// <returns></returns>
-        public static bool PolyHasFire(long polyRef)
+        public bool PolyHasFire(long polyRef)
         {
             if ( _firePolys.TryGetValue(polyRef, out var fire) && fire != null )
             {

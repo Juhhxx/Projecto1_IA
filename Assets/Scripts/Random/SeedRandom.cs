@@ -13,6 +13,7 @@ namespace Scripts.Random
         {
             Owner = owner;
             (ID, Random) = RandomManager.Instance.RegisterStream(this);
+            Debug.Log("Registered new stream: " + this);
         }
 
         public int Range(int minInclusive, int maxExclusive)

@@ -41,8 +41,7 @@ namespace Scripts.Random
                 ID = ID * 31 + c;
 
             _streams.Add(stream);
-            
-            Debug.Log("Registered new stream: " + stream);
+        
             return (ID, new System.Random(BaseSeed ^ stream.ID));
         }
     }

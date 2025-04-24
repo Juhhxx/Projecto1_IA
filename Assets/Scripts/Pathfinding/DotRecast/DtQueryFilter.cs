@@ -1,5 +1,6 @@
 using DotRecast.Core.Numerics;
 using DotRecast.Detour;
+using Scripts.Fire;
 
 namespace Scripts.Pathfinding.DotRecast
 {
@@ -8,7 +9,12 @@ namespace Scripts.Pathfinding.DotRecast
     /// </summary>
     public class DtQueryFilter : IDtQueryFilter
     {
-        public float GetCost(RcVec3f pa, RcVec3f pb, long prevRef, DtMeshTile prevTile, DtPoly prevPoly, long curRef, DtMeshTile curTile, DtPoly curPoly, long nextRef, DtMeshTile nextTile, DtPoly nextPoly)
+        protected ExplosionManager _explosion;
+        public DtQueryFilter(ExplosionManager explosionManager) : base()
+        {
+            _explosion = explosionManager;
+        }
+        public virtual float GetCost(RcVec3f pa, RcVec3f pb, long prevRef, DtMeshTile prevTile, DtPoly prevPoly, long curRef, DtMeshTile curTile, DtPoly curPoly, long nextRef, DtMeshTile nextTile, DtPoly nextPoly)
         {
             return (pa - pb).LengthSquared(); // basic cost in distance, perhaps we should have a mono behavior child of the interface of DtMeshTile so we manually set these costs?
 

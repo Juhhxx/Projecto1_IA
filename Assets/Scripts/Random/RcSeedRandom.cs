@@ -14,6 +14,7 @@ namespace Scripts.Random
         {
             Owner = owner;
             (ID, Random) = RandomManager.Instance.RegisterStream(this);
+            Debug.Log("Registered new RC stream: " + this);
         }
 
         public float Next()
