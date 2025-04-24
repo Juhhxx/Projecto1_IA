@@ -10,6 +10,7 @@ namespace Scripts.Pathfinding
     public class DRCrowdManager : MonoBehaviour
     {
         [SerializeField] private DRcHandle _handle;
+        // for object pooling
         [SerializeField] private int _maxAgents = 100;
         public float maxAgentRadius = 0.6f;
 
@@ -25,11 +26,9 @@ namespace Scripts.Pathfinding
         [SerializeField] private float collisionQueryRange = 1.2f;
         [SerializeField] private float pathOptimizationRange = 30f;
         [SerializeField] private float separationWeight = 2f;
-        [SerializeField] private int queryFilterType = 0;
 
         [Header("Agent Panic Parameters")]
         [SerializeField] private float maxPanicSpeed = 3.5f;
-        [SerializeField] private int queryPanicFilterType = 0;
 
         private IDtQueryFilter RegularFilter;
         private IDtQueryFilter PanicFilter;
