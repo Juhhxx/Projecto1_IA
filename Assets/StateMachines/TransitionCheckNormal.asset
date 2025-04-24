@@ -9,7 +9,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e01e3a1ba2c945f419c6aa7f21157724, type: 3}
-  m_Name: StateA
+  m_Script: {fileID: 11500000, guid: 94768c119ec3ab74198ffcaafc8bb1eb, type: 3}
+  m_Name: TransitionCheckNormal
   m_EditorClassIdentifier: 
-  Name: A
+  Name: CheckNormal
+  ToState: {fileID: 11400000, guid: ee5ad1d254d733543b1e67819d7bc8bc, type: 2}
+  Stat: 0

@@ -6,28 +6,31 @@ using Scripts.AI.FSMs.UnityIntegration;
 
 namespace Scripts.AI
 {
-    [CreateAssetMenu(fileName = "StateMove", menuName = "State Machines/StateMove")]
-    public class StateMove : StateAbstract
+    [CreateAssetMenu(fileName = "StateHungry", menuName = "State Machines/StateHungry")]
+    public class StateHungry : StateAbstract
     {
         private GameObject  gameObject;
-        private Transform   transform;
+        private AgentStatsController _agent;
+
         protected override void EntryAction()
         {
             Debug.Log($"Start State {Name}");
+            _agent.ChangeColor(_agent.HungryColor);
+            _agent.StartDepletingEnergy();
         }
         protected override void StateAction()
         {
-            Debug.Log($"Doing State {transform.position}");
-            transform.position += new Vector3(1f,0f,0f);
+            _agent.ReturnToNormal();
         }
         protected override void ExitAction()
         {
             Debug.Log($"Exiting State {Name}");
+            _agent.StopDepletingEnergy();
         }
         public override void InstantiateState()
         {
             gameObject  = base.objectReference;
-            transform   = gameObject.transform;
+            _agent = gameObject.GetComponent<AgentStatsController>();
 
             base.state = new State(Name,EntryAction,StateAction,ExitAction);
         }

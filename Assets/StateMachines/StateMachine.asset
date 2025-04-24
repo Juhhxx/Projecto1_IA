@@ -12,14 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ad3658913798e804d8fef6141f7dae50, type: 3}
   m_Name: StateMachine
   m_EditorClassIdentifier: 
-  InitialState: {fileID: 11400000, guid: da7e52c19f5e4f84ea12a83bfa39c69e, type: 2}
+  InitialState: {fileID: 11400000, guid: ee5ad1d254d733543b1e67819d7bc8bc, type: 2}
   StateTransitions:
-  - State: {fileID: 11400000, guid: da7e52c19f5e4f84ea12a83bfa39c69e, type: 2}
+  - State: {fileID: 11400000, guid: ee5ad1d254d733543b1e67819d7bc8bc, type: 2}
     Transitions:
-    - {fileID: 11400000, guid: 26bb870b39043a84cae486737de97be3, type: 2}
-  - State: {fileID: 11400000, guid: 3e8657eeafc2f3443af48e87db6ee786, type: 2}
+    - {fileID: 11400000, guid: 854be8161c2f43243868566a75fb490a, type: 2}
+    - {fileID: 11400000, guid: e5ff7d4e47f24e944994b9baa14e25ae, type: 2}
+  - State: {fileID: 11400000, guid: db8555ffe2e556a4391529b7add46254, type: 2}
     Transitions:
-    - {fileID: 11400000, guid: 8d3f8c46b1b4d2042b1643146129ffae, type: 2}
-  - State: {fileID: 11400000, guid: 97fcc98be0ad0444085bba5286521724, type: 2}
+    - {fileID: 11400000, guid: 85566b887cf0bed4182e21828117e3e1, type: 2}
+  - State: {fileID: 11400000, guid: a790afbe431c70f49aa4b97b9e440d16, type: 2}
     Transitions:
-    - {fileID: 11400000, guid: 13a1c7509c94e69458f3d5cf6be4e044, type: 2}
+    - {fileID: 11400000, guid: 85566b887cf0bed4182e21828117e3e1, type: 2}

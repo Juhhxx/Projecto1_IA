@@ -9,8 +9,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 75df3ec1816b09f488ccb753e7ac97da, type: 3}
-  m_Name: StateMove
+  m_Script: {fileID: 11500000, guid: 94768c119ec3ab74198ffcaafc8bb1eb, type: 3}
+  m_Name: TransitionCheckHungry
   m_EditorClassIdentifier: 
-  Name: Move
-  gameObject: {fileID: 0}
+  Name: CheckHungry
+  ToState: {fileID: 11400000, guid: db8555ffe2e556a4391529b7add46254, type: 2}
+  Stat: 1
