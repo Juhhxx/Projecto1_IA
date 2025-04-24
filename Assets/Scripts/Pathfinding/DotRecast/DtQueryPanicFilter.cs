@@ -23,7 +23,7 @@ namespace Scripts.Pathfinding.DotRecast
             if ( expl > value && expl < 120f ) // only avoid explosion if objective is farther and is near it
                 expl = (120f - expl) * 2f; // stronger penalty the closer it is
             
-            if ( _explosion.PolyHasFire(nextRef) )
+            if ( _explosion.PolyHasFire(curRef) )
                 value *= 10;
             
             return value + expl;
