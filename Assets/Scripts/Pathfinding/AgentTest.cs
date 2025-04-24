@@ -14,12 +14,11 @@ public class AgentTest : MonoBehaviour
 
     private void Awake()
     {
-        _rand = new SeedRandom(gameObject);
+        // _rand = new SeedRandom(gameObject);
     }
 
     private void Start()
     {
-        transform.position = SnapToNavMesh(transform.position);
         
         Bounds values = _boundBox.bounds;
 
@@ -28,8 +27,6 @@ public class AgentTest : MonoBehaviour
             transform.position.y, // Random.Range(values.min.y, values.max.y), // this wont be needed later i assume
             _rand.Range(values.min.z, values.max.z)
         );
-
-        randomEnd = SnapToNavMesh(randomEnd);
 
         Debug.DrawLine(transform.position, randomEnd, Color.yellow, float.MaxValue);
 
@@ -57,15 +54,6 @@ public class AgentTest : MonoBehaviour
                 yield return null;
             }
         }
-    }
-
-
-    public static Vector3 SnapToNavMesh(Vector3 position)
-    {
-        RcVec3f rc = DRcHandle.ToDotVec3(position);
-        DRcHandle.FindNearest(rc, out _, out var nearest, out _);
-
-        return new Vector3(nearest.X, nearest.Y, nearest.Z);
     }
 
     private void OnDrawGizmos()
