@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+using System.Linq;
 using DotRecast.Core.Numerics;
 using DotRecast.Detour;
 using DotRecast.Detour.Crowd;
@@ -45,14 +45,15 @@ namespace Scripts.Pathfinding
 
         [Header("Agent Panic Parameters")]
         [SerializeField] private float maxPanicSpeed = 3.5f;
+        [SerializeField] private float pathPanicOptimizationRange = 30f;
+        [SerializeField] private float collisionPanicQueryRange = 1.2f;
+        [SerializeField] private float separationPanicWeight = 2f;
 
         private IDtQueryFilter RegularFilter;
         private IDtQueryFilter PanicFilter;
 
         internal protected override void AwakeOrdered()
         {
-            _AgentsPerUpdateBatch = _maxAgents / _AgentsPerUpdateBatch;
-
             Rand = new SeedRandom(gameObject);
 
             if ( _handle == null )
@@ -63,7 +64,6 @@ namespace Scripts.Pathfinding
 
             RegularFilter = new DtQueryRegularFilter(_explosionManager);
             PanicFilter = new DtQueryPanicFilter(_explosionManager);
-
 
             _crowd = new DtCrowd(
                 new DtCrowdConfig(maxAgentRadius),
@@ -83,7 +83,10 @@ namespace Scripts.Pathfinding
                 maxSpeed = maxSpeed,
                 collisionQueryRange = collisionQueryRange,
                 pathOptimizationRange = pathOptimizationRange,
-                updateFlags = 0,
+                updateFlags = DRCrowdUpdateFlags.DT_CROWD_OBSTACLE_AVOIDANCE
+                            | DRCrowdUpdateFlags.DT_CROWD_ANTICIPATE_TURNS
+                            | DRCrowdUpdateFlags.DT_CROWD_SEPARATION,
+                obstacleAvoidanceType = 0,
                 separationWeight = separationWeight,
                 queryFilterType = 0
             };
@@ -93,25 +96,32 @@ namespace Scripts.Pathfinding
                 radius = _normalParams.radius,
                 height = _normalParams.height,
                 maxAcceleration = _normalParams.maxAcceleration,
-                collisionQueryRange = _normalParams.collisionQueryRange,
-                pathOptimizationRange = _normalParams.pathOptimizationRange,
-                updateFlags = _normalParams.updateFlags,
-                separationWeight = _normalParams.separationWeight,
+                obstacleAvoidanceType = _normalParams.obstacleAvoidanceType,
+
+                separationWeight = separationPanicWeight,
+                collisionQueryRange = collisionPanicQueryRange,
+                pathOptimizationRange = pathPanicOptimizationRange,
+                updateFlags = DRCrowdUpdateFlags.DT_CROWD_OBSTACLE_AVOIDANCE
+                            | DRCrowdUpdateFlags.DT_CROWD_ANTICIPATE_TURNS
+                            | DRCrowdUpdateFlags.DT_CROWD_SEPARATION,
                 queryFilterType = 1,
                 maxSpeed = maxPanicSpeed
             };
-
-            foreach ( DRAgent a in _agents )
-            {
-                a.gameObject.SetActive(true);
-                a.StartOrdered();
-            }
         }
+
+        public static class DRCrowdUpdateFlags
+        {
+            public const int DT_CROWD_ANTICIPATE_TURNS = 1 << 0;
+            public const int DT_CROWD_OBSTACLE_AVOIDANCE = 1 << 1;
+            public const int DT_CROWD_SEPARATION = 1 << 2;
+            public const int DT_CROWD_OPTIMIZE_VIS = 1 << 3;
+            public const int DT_CROWD_OPTIMIZE_TOPO = 1 << 4;
+        }
+
+        internal protected override void StartOrdered() {}
 
         internal protected override void UpdateOrdered()
         {
-            if ( Time.frameCount < 10 ) return;
-
             Profiler.BeginSample("DRC DRCrowdManager");
 
             _crowd.Update(Time.deltaTime, null);
@@ -120,6 +130,17 @@ namespace Scripts.Pathfinding
 
             for (int i = offset; i < _agents.Length; i += _AgentsPerUpdateBatch)
                 _agents[i].UpdateOrdered();
+
+
+            if ( ! Exit.AnyExitUnoccupied() ) return;
+
+            DRAgent agent = _agents.FirstOrDefault(t => !t.IsActive);
+
+            if ( agent != null )
+            {
+                agent.gameObject.SetActive(true);
+                agent.Activate();
+            }
         }
 
         public DtCrowdAgent AddAgent(Vector3 position, bool isPanicked)
@@ -132,13 +153,6 @@ namespace Scripts.Pathfinding
             _crowd.RemoveAgent(agentId);
         }
 
-        public void SetTarget(DtCrowdAgent agentId, Vector3 target)
-        {
-            RcVec3f rcVec = DRcHandle.ToDotVec3(target);
-            DRcHandle.FindNearest(rcVec, out long nearestRef, out RcVec3f nearestPt, out bool _);
-
-            _crowd.RequestMoveTarget(agentId, nearestRef, nearestPt);
-        }
         public void SetTarget(DtCrowdAgent agentId, long targetRef, RcVec3f targetPos)
         {   
             _crowd.RequestMoveTarget(agentId, targetRef, targetPos);
@@ -154,10 +168,9 @@ namespace Scripts.Pathfinding
             _crowd.UpdateAgentParameters(agentId, _normalParams);
         }
 
-        public Vector3 SnapToNavMesh(Vector3 position)
+        public Vector3 SnapToNavMesh(RcVec3f position)
         {
-            RcVec3f rc = DRcHandle.ToDotVec3(position);
-            DRcHandle.FindNearest(rc, out _, out var nearest, out _);
+            DRcHandle.FindNearest(position, out _, out var nearest, out _);
 
             return  DRcHandle.ToUnityVec3(nearest);
         }
