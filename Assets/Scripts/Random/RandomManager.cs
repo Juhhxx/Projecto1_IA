@@ -24,6 +24,8 @@ namespace Scripts.Random
             Instance = this;
         }
 
+        internal protected override void StartOrdered() {}
+
         public (int, System.Random) RegisterStream(ISeedRandom stream)
         {
             // int ID = stream.Owner.transform.hierarchyCapacity ^ stream.Owner.transform.GetSiblingIndex();
