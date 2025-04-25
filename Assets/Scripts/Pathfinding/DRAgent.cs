@@ -1,3 +1,4 @@
+using DotRecast.Core.Numerics;
 using DotRecast.Detour.Crowd;
 using UnityEngine;
 using UnityEngine.Profiling;
@@ -10,15 +11,30 @@ namespace Scripts.Pathfinding
         [SerializeField] private float _acceptedDistToGoal = 2f;
         private DtCrowdAgent _agentID;
 
+        [SerializeField] private Structure<Stage> _stage;
+        private Structure<Exit> _exit;
+        private (RcVec3f, long)  _lastSpot;
+        private (RcVec3f, long)  _curSpot;
+        private (RcVec3f, long) _nextSpot;
+
         public bool IsActive { get; private set; }
 
-        public void Activate(Vector3 position)
+        public void Activate()
         {
-            transform.position = position;
-            gameObject.SetActive(true);
+            _exit = Exit.GetRandomGoodExit( _crowdManager.Rand.Range(0, 32), out (RcVec3f, long) pos);
+            _exit.StayInSpot(pos.Item2);
+            _lastSpot = pos;
+
             IsActive = true;
 
-            _agentID = _crowdManager.AddAgent(position, false);
+            transform.position = _crowdManager.SnapToNavMesh(pos.Item1);;
+            
+            _agentID = _crowdManager.AddAgent(transform.position, false);
+
+            _stage = Stage.FindNearest(_agentID.npos);
+            _crowdManager.SetTarget(_agentID, _stage.Ref, _stage.Position);
+
+            // Debug.Log("Set agent target as " + _stage + " in pos " + transform.position + " spawned at exit " + pos.Item1);
         }
 
         public void Deactivate()
@@ -30,30 +46,58 @@ namespace Scripts.Pathfinding
             gameObject.SetActive(false);
         }
 
-
-
-        // these are testing methods
-        public void StartOrdered()
-        {
-            Vector3 newRandomPos = GetRandomPos();
-
-            transform.position = _crowdManager.SnapToNavMesh(transform.position);
-
-            _agentID = _crowdManager.AddAgent(transform.position, false);
-            _crowdManager.SetTarget(_agentID, newRandomPos);
-        }
         public void UpdateOrdered()
         {
             Profiler.BeginSample("DRC Agent");
 
-            transform.SetPositionAndRotation(
-                DRcHandle.ToUnityVec3(_agentID.npos),
-                DRcHandle.ToDotQuat(_agentID.vel));
-
-            if ( _agentID.GetDistanceToGoal(_acceptedDistToGoal) < _acceptedDistToGoal)
+            if ( _stage != null && _stage.EnteredArea(_agentID.npos) )
             {
-                _crowdManager.SetTarget(_agentID, GetRandomPos());
+                // Debug.Log("Done Entered! New place: " + _nextSpot.Item1.X + " " + _nextSpot.Item1.Z);
+
+                (RcVec3f, long) newplace = _stage.GetBestSpot(_agentID.npos, _crowdManager.Rand.Range(1, 10));
+
+                if ( RcVec3f.Distance(_agentID.npos, _nextSpot.Item1) < _acceptedDistToGoal )
+                {
+                    _stage.StayInSpot(_nextSpot.Item2);
+                    _stage = null;
+                }
+                else if ( newplace != _nextSpot )
+                {
+                    _nextSpot = newplace;
+                    _crowdManager.SetTarget(_agentID, _nextSpot.Item2, _nextSpot.Item1);
+                    return;
+                }
             }
+        }
+
+        private void Update()
+        {
+            if ( _agentID != null )
+            {
+                transform.position = DRcHandle.ToUnityVec3(_agentID.npos);
+                if ( _agentID.vel.Length() > 0f )
+                    transform.rotation = DRcHandle.ToDotQuat(_agentID.vel);
+            }
+
+            if ( _exit != null && RcVec3f.Distance(_agentID.npos, _lastSpot.Item1) > _acceptedDistToGoal)
+            {
+                // Debug.Log("Exited spot with distance " + RcVec3f.Distance(_agentID.npos, _lastSpot.Item1));
+                _exit.LeaveSpot( _lastSpot.Item2 );
+                _exit = null;
+            }
+        }
+
+
+        /*// these are testing methods
+        public void StartOrdered()
+        {
+            transform.position = _crowdManager.SnapToNavMesh(transform.position);
+
+            _agentID = _crowdManager.AddAgent(transform.position, false);
+
+            _stage = Stage.FindNearest(_agentID.npos);
+            _crowdManager.SetTarget(_agentID, _stage.Ref, _stage.Position);
+            Debug.Log("Set agent target as " + _stage);
         }
         private Vector3 GetRandomPos()
         {
@@ -66,7 +110,7 @@ namespace Scripts.Pathfinding
                 );
             return _crowdManager.SnapToNavMesh(randomEnd);
         }
-        // these are testing methods
+        // these are testing methods*/
 
 
 
