@@ -1,6 +1,7 @@
 using DotRecast.Core.Numerics;
 using DotRecast.Detour;
 using Scripts.Fire;
+using UnityEngine;
 
 namespace Scripts.Pathfinding.DotRecast
 {
@@ -21,6 +22,8 @@ namespace Scripts.Pathfinding.DotRecast
             
             if ( _explosion.PolyHasFire(curRef) )
                 value *= 10;
+
+            if ( curPoly.GetArea() != 0 ) Debug.Log(" poly area is " + curPoly.GetArea() );
             
             return value; // basic cost in distance, perhaps we should have a mono behavior child of the interface of DtMeshTile so we manually set these costs?
         }

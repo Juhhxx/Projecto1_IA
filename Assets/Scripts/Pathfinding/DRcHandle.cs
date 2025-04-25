@@ -14,6 +14,9 @@ using Scripts.Pathfinding.DotRecast;
 using UnityEngine.Profiling;
 using UnityEngine.SceneManagement;
 using System.Linq;
+using UniRecast.Toolsets;
+using UniRecast.Editor;
+using DotRecast.Recast.Toolset;
 
 namespace Scripts.Pathfinding
 {
@@ -59,6 +62,24 @@ namespace Scripts.Pathfinding
             }
             
 
+            UniRcConvexVolumeTool[] volumes = FindObjectsByType<UniRcConvexVolumeTool>(FindObjectsSortMode.None);
+            _volumes = volumes.Select(t => t.transform).ToArray();
+
+            for (int tileIndex = 0; tileIndex < NavMeshData.GetMaxTiles(); tileIndex++)
+            {
+                DtMeshTile tile = NavMeshData.GetTile(tileIndex);
+                if (tile == null || tile.data == null) continue;
+
+                for (int polyIndex = 0; polyIndex < tile.data.header.polyCount; polyIndex++)
+                {
+                    long polyRef = DtDetour.EncodePolyId(tile.salt, tile.index, polyIndex);
+                    RcVec3f center = NavMeshData.GetPolyCenter(polyRef);
+
+                    if (InsideArea(center))
+                        NavMeshData.SetPolyArea(polyRef, (char) 1); // weighted
+                }
+            }
+
             NavQuery = new DtNavMeshQuery(NavMeshData);
             Filter = new DtQueryDefaultFilter();
 
@@ -69,6 +90,33 @@ namespace Scripts.Pathfinding
             FoodArea.AwakeOrdered();
             GreenSpace.AwakeOrdered();
             Stage.AwakeOrdered();
+        }
+
+        private Transform[] _volumes;
+        private bool InsideArea(RcVec3f point)
+        {
+            Vector3 scale;
+            Vector3 worldPoint;
+            float radiusX;
+            float radiusZ;
+            float dx;
+            float dz;
+
+            foreach ( Transform vol in _volumes)
+            {
+                scale = vol.lossyScale;
+
+                radiusX = scale.x * 0.5f;
+                radiusZ = scale.z * 0.5f;
+
+                worldPoint = ToUnityVec3(point);
+
+                dx = (worldPoint.x - vol.position.x) / radiusX;
+                dz = (worldPoint.z - scale.z) / radiusZ;
+
+                return (dx * dx + dz * dz) <= 1.0f;
+            }
+            return false;
         }
 
         private bool _started = false;
