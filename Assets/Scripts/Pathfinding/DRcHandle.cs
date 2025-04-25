@@ -12,6 +12,8 @@ using DotRecast.Detour.Io;
 using DotRecast.Core;
 using Scripts.Pathfinding.DotRecast;
 using UnityEngine.Profiling;
+using UnityEngine.SceneManagement;
+using System.Linq;
 
 namespace Scripts.Pathfinding
 {
@@ -62,7 +64,22 @@ namespace Scripts.Pathfinding
 
             foreach ( Manager m in _managers )
                 m.AwakeOrdered();
+            
+            Exit.AwakeOrdered();
+            FoodArea.AwakeOrdered();
+            GreenSpace.AwakeOrdered();
+            Stage.AwakeOrdered();
         }
+
+        private bool _started = false;
+
+        private void Start()
+        {
+            foreach ( Manager m in _managers )
+                m.StartOrdered();
+            _started = true;
+        }
+        internal protected override void StartOrdered() {}
 
         private DtNavMesh LoadNavMeshFromFile(string fileName)
         {
@@ -82,7 +99,7 @@ namespace Scripts.Pathfinding
         }
 
         #if UNITY_EDITOR
-        [ContextMenu("Bake NavMesh and Fire Polys Into Scene")]
+        [ContextMenu("Bake NavMesh Into Scene")]
         public void EditorBake()
         {
             if (_navMesh == null)
@@ -110,6 +127,8 @@ namespace Scripts.Pathfinding
 
         private void Update()
         {
+            if ( !_started ) return;
+
             Profiler.BeginSample("DRC HANDLE");
 
             foreach ( Manager m in _managers )
@@ -120,7 +139,7 @@ namespace Scripts.Pathfinding
         {
             DtStatus result = NavQuery.FindNearestPoly(center, _snapSize, Filter, out nearestRef, out nearestPt, out isOverPoly);
 
-            if (nearestRef == 0)
+            if ( nearestRef == 0 )
                 Debug.LogWarning($"FindNearestPoly failed at {center}");
 
             return result;
@@ -131,8 +150,8 @@ namespace Scripts.Pathfinding
             RcVec3f newCenter = ToDotVec3(center);
             DtStatus result = NavQuery.FindNearestPoly(newCenter, _snapSize, Filter, out nearestRef, out nearestPt, out isOverPoly);
 
-            if (nearestRef == 0)
-                Debug.LogWarning($"FindNearestPoly failed at {center}");
+            if ( nearestRef == 0 )
+                Debug.LogWarning($"FindNearestPoly failed at {center} debug is {result.Succeeded()}");
 
             return result;
         }
@@ -192,9 +211,7 @@ namespace Scripts.Pathfinding
         }
 
         internal protected override void AwakeOrdered() {}
-
         internal protected override void Bake() {}
-
         internal protected override void UpdateOrdered() {}
     }
 }
