@@ -99,6 +99,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 36a9c4bf543f93946a244319d72beebc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _radius: 10
+  _radius: 149.74
   _tooManyAgents: 2
   _area: {fileID: 2665576758902317258}
+  _spacing: 6
