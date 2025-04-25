@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 6176558493338292751}
   - component: {fileID: 9216979299317953333}
   - component: {fileID: 2665576758902317258}
+  - component: {fileID: 5566175081414092330}
   m_Layer: 0
   m_Name: "Espa\xE7oVerde"
   m_TagString: Untagged
@@ -86,3 +87,18 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &5566175081414092330
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6172041683473797081}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 36a9c4bf543f93946a244319d72beebc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _radius: 10
+  _tooManyAgents: 2
+  _area: {fileID: 2665576758902317258}

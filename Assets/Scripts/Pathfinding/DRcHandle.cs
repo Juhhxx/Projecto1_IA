@@ -126,6 +126,17 @@ namespace Scripts.Pathfinding
             return result;
         }
 
+        public static DtStatus FindNearest(Vector3 center, out long nearestRef, out RcVec3f nearestPt, out bool isOverPoly)
+        {
+            RcVec3f newCenter = ToDotVec3(center);
+            DtStatus result = NavQuery.FindNearestPoly(newCenter, _snapSize, Filter, out nearestRef, out nearestPt, out isOverPoly);
+
+            if (nearestRef == 0)
+                Debug.LogWarning($"FindNearestPoly failed at {center}");
+
+            return result;
+        }
+
         // public DtStatus FindPath(long startRef, long endRef, RcVec3f startPos, RcVec3f endPos, IDtQueryFilter filter, ref List<long> path, DtFindPathOption fpo)
         // public virtual DtStatus FindStraightPath(RcVec3f startPos, RcVec3f endPos, List<long> path, int pathSize, Span<DtStraightPath> straightPath, out int straightPathCount, int maxStraightPath, int options)
         public static IList<Vector3> FindPath(Vector3 start, Vector3 end)

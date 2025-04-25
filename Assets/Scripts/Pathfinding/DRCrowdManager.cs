@@ -111,7 +111,7 @@ namespace Scripts.Pathfinding
         internal protected override void UpdateOrdered()
         {
             if ( Time.frameCount < 10 ) return;
-            
+
             Profiler.BeginSample("DRC DRCrowdManager");
 
             _crowd.Update(Time.deltaTime, null);
@@ -138,6 +138,10 @@ namespace Scripts.Pathfinding
             DRcHandle.FindNearest(rcVec, out long nearestRef, out RcVec3f nearestPt, out bool _);
 
             _crowd.RequestMoveTarget(agentId, nearestRef, nearestPt);
+        }
+        public void SetTarget(DtCrowdAgent agentId, long targetRef, RcVec3f targetPos)
+        {   
+            _crowd.RequestMoveTarget(agentId, targetRef, targetPos);
         }
 
         public void SwitchToPanic(DtCrowdAgent agentId)
