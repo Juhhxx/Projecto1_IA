@@ -19,6 +19,7 @@ namespace Scripts.Fire
         [SerializeField] private GameObject _explosionObject;
         [SerializeField] private float _radius = 20f, _radiusDeviation = 3f, _fireChance = 0.5f;
         [SerializeField] private int _FirePerUpdateBatch = 2;
+        [SerializeField] private int _runEveryframe = 2;
         [SerializeField] private float _explosionChancePerFrame = 0.001f;
 
         private static Dictionary<long, GameObject> _firePolys = new();
@@ -30,8 +31,6 @@ namespace Scripts.Fire
 
         internal protected override void AwakeOrdered()
         {
-            _FirePerUpdateBatch = _firePolyList.Count / _FirePerUpdateBatch;
-
             if ( _handle == null )
                 _handle = FindFirstObjectByType<DRcHandle>();
 
@@ -45,6 +44,8 @@ namespace Scripts.Fire
             }
             Debug.Log("Poly dict count: " + _firePolys.Count);
         }
+
+        internal protected override void StartOrdered(){}
 
         #if UNITY_EDITOR
         internal protected override void Bake()
@@ -144,7 +145,7 @@ namespace Scripts.Fire
 
         internal protected override void UpdateOrdered()
         {
-            if (Time.frameCount % 3 != 0) // run every 3 frames
+            if (Time.frameCount % _runEveryframe != 0) // run every 2 frames
                 return;
 
             Profiler.BeginSample("DRC ExplosionManager");
@@ -169,33 +170,14 @@ namespace Scripts.Fire
                 }
             }
 
-            int offset = Time.frameCount % _FirePerUpdateBatch;
+            int offset = Mathf.Min(_FirePerUpdateBatch, _firePolyList.Count);
 
-            for (int i = offset; i < _firePolyList.Count; i += _FirePerUpdateBatch)
-                if ( _firePolyList[i].gameObject.activeSelf )
+            _firePolyList.Sort((a, b) => a.ON == b.ON ? 0 : (a.ON ? -1 : 1));
+
+            for (int i = 0; i < offset; i++)
+                if ( _firePolyList[i].ON )
                     _firePolyList[i].UpdateOrdered();
         }
-
-        private void Update()
-        {
-            if (Time.frameCount % 3 != 0) // run every 3 frames
-                return;
-            
-            Profiler.BeginSample("DRC ExplosionManager Graphics");
-
-            _fireMatrices.Clear();
-
-            foreach ( Fire fire in _firePolyList )
-                if ( fire.gameObject.activeSelf )
-                    _fireMatrices.Add(fire.Matrix);
-
-            Graphics.DrawMeshInstanced(_fireMesh, 0, _fireMaterial, _fireMatrices);
-        }
-
-        [SerializeField] private Mesh _fireMesh;
-        [SerializeField] private Material _fireMaterial;
-        [SerializeField] private List<Matrix4x4> _fireMatrices = new();
-
 
         private IEnumerator ExplodeAt(Vector3 pos, float radius)
         {
@@ -297,7 +279,6 @@ namespace Scripts.Fire
                 fire.SetActive(true);
                 return true;
             }
-
             
             Debug.LogWarning("Fire not already baked, polyRef: " + polyRef + " _firePolys count: " + _firePolys.Count);
             return false;
