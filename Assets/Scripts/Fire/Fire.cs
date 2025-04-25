@@ -9,19 +9,26 @@ namespace Scripts.Fire
 
         [field:SerializeField] public long PolyRef { get; private set; }
         [field:SerializeField] public long[] NeiRefs { get; private set; }
-        [field:SerializeField] public Matrix4x4 Matrix { get; private set; }
         [SerializeField] private float _firePropagation = 0.005f;
 
         private float _lifeTime;
+        public bool ON { get; private set; } = false;
 
         private void OnEnable()
         {
             _lifeTime = 0f;
+            ON = true;
+        }
+
+        private void OnDisable()
+        {
+            ON = false;
         }
 
         public void UpdateOrdered()
         {
             Profiler.BeginSample("DRC Fire");
+
             _lifeTime += Time.deltaTime;
             if ( _lifeTime >= _duration )
                 gameObject.SetActive(false);
@@ -33,9 +40,8 @@ namespace Scripts.Fire
         #if UNITY_EDITOR
         public void SetRefs(long selfRef, long[] neiRefs)
         {
-           Matrix = Matrix4x4.TRS(transform.position, transform.rotation, transform.localScale);
-            PolyRef = selfRef;
-            NeiRefs = neiRefs;
+           PolyRef = selfRef;
+           NeiRefs = neiRefs;
         }
         #endif
     }
