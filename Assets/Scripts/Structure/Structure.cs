@@ -9,21 +9,34 @@ public abstract class Structure<T> : MonoBehaviour where T : Structure<T>
     [SerializeField] private int _tooManyAgents = 5;
 
     // one structure list per subclass
-    private static List<T> _structures = new List<T>();
-    private (RcVec3f, long)[] _places;
+    protected static List<T> _structures = new List<T>();
+    protected (RcVec3f, long)[] _places;
     private Dictionary<long, int> _placeDict;
 
     public RcVec3f Position { get; private set; }
     public long Ref { get; private set; }
 
+    public static void AwakeOrdered()
+    {
+        foreach (T structure in _structures)
+            structure.StartStructure();
+    }
+
     private void Awake()
     {
+        if (this is T type)
+            _structures.Add(type);
+    }
+    private void StartStructure()
+    {
+        _positions = new HashSet<Vector3>();
+        _placeDict = new Dictionary<long, int>();
+
         DRcHandle.FindNearest(transform.position, out long nearestRef, out RcVec3f nearestPt, out _);
         Ref = nearestRef;
         Position = nearestPt;
 
         SetUpPoints();
-        _structures.Add((T)this);
 
         foreach ( (RcVec3f, long) y in _places )
             _placeDict[y.Item2] = 0;
@@ -32,13 +45,16 @@ public abstract class Structure<T> : MonoBehaviour where T : Structure<T>
     public static T FindNearest(RcVec3f pos)
     {
         if (_structures.Count == 0)
+        {
+            Debug.LogWarning("No structures of this type yet. ");
             return null;
+        }
 
         T chosen = _structures[0];
         float minDist = RcVec3f.Distance(pos, chosen.Position);
         float dist;
 
-        foreach (var structure in _structures)
+        foreach (T structure in _structures)
         {
             dist = RcVec3f.Distance(pos, structure.Position);
             if (dist < minDist)
@@ -104,5 +120,24 @@ public abstract class Structure<T> : MonoBehaviour where T : Structure<T>
     public bool IsGoodSpot(long polyRef)
     {
         return _placeDict.TryGetValue(polyRef, out int count) && count < _tooManyAgents;
+    }
+
+
+    protected HashSet<Vector3> _positions;
+
+    #if UNITY_EDITOR
+    private void OnDrawGizmosSelected()
+    {
+        Gizmos.DrawWireSphere(transform.position, _radius);
+
+        if ( _positions != null )
+            foreach (Vector3 pos in _positions)
+                Gizmos.DrawSphere(pos, 1f);
+    }
+    #endif
+
+    public override string ToString()
+    {
+        return $"Structure {gameObject.name}";
     }
 }
