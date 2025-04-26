@@ -50,22 +50,24 @@ namespace Scripts.Pathfinding
         {
             Profiler.BeginSample("DRC Agent");
 
-            if ( _stage != null && _stage.EnteredArea(_agentID.npos) )
+            if ( _exit == null && _stage != null && _stage.EnteredArea(_agentID.npos) )
             {
                 // Debug.Log("Done Entered! New place: " + _nextSpot.Item1.X + " " + _nextSpot.Item1.Z);
 
                 (RcVec3f, long) newplace = _stage.GetBestSpot(_agentID.npos, _crowdManager.Rand.Range(1, 10));
 
-                if ( RcVec3f.Distance(_agentID.npos, _nextSpot.Item1) < _acceptedDistToGoal )
+                Debug.Log("Returning new " + newplace.Item2);
+
+                if ( newplace != _nextSpot )
+                {
+                    Debug.Log("Setting new target");
+                    _nextSpot = newplace;
+                    _crowdManager.SetTarget(_agentID, _nextSpot.Item2, _nextSpot.Item1);
+                }
+                else if ( RcVec3f.Distance(_agentID.npos, _nextSpot.Item1) < _acceptedDistToGoal )
                 {
                     _stage.StayInSpot(_nextSpot.Item2);
                     _stage = null;
-                }
-                else if ( newplace != _nextSpot )
-                {
-                    _nextSpot = newplace;
-                    _crowdManager.SetTarget(_agentID, _nextSpot.Item2, _nextSpot.Item1);
-                    return;
                 }
             }
         }
@@ -75,8 +77,12 @@ namespace Scripts.Pathfinding
             if ( _agentID != null )
             {
                 transform.position = DRcHandle.ToUnityVec3(_agentID.npos);
-                if ( _agentID.vel.Length() > 0f )
+                if ( _agentID.vel.Length() > 0.1f )
                     transform.rotation = DRcHandle.ToDotQuat(_agentID.vel);
+                else
+                {
+                    // _crowdManager.SetTarget(_agentID, _nextSpot.Item2, _nextSpot.Item1);
+                }
             }
 
             if ( _exit != null && RcVec3f.Distance(_agentID.npos, _lastSpot.Item1) > _acceptedDistToGoal)

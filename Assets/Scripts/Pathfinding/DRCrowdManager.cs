@@ -85,7 +85,9 @@ namespace Scripts.Pathfinding
                 pathOptimizationRange = pathOptimizationRange,
                 updateFlags = DRCrowdUpdateFlags.DT_CROWD_OBSTACLE_AVOIDANCE
                             | DRCrowdUpdateFlags.DT_CROWD_ANTICIPATE_TURNS
-                            | DRCrowdUpdateFlags.DT_CROWD_SEPARATION,
+                            | DRCrowdUpdateFlags.DT_CROWD_SEPARATION
+                            | DRCrowdUpdateFlags.DT_CROWD_OPTIMIZE_VIS
+                            | DRCrowdUpdateFlags.DT_CROWD_OPTIMIZE_TOPO,
                 obstacleAvoidanceType = 0,
                 separationWeight = separationWeight,
                 queryFilterType = 0
@@ -101,9 +103,7 @@ namespace Scripts.Pathfinding
                 separationWeight = separationPanicWeight,
                 collisionQueryRange = collisionPanicQueryRange,
                 pathOptimizationRange = pathPanicOptimizationRange,
-                updateFlags = DRCrowdUpdateFlags.DT_CROWD_OBSTACLE_AVOIDANCE
-                            | DRCrowdUpdateFlags.DT_CROWD_ANTICIPATE_TURNS
-                            | DRCrowdUpdateFlags.DT_CROWD_SEPARATION,
+                updateFlags = _normalParams.updateFlags,
                 queryFilterType = 1,
                 maxSpeed = maxPanicSpeed
             };
