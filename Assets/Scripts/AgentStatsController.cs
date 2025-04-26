@@ -14,7 +14,7 @@ namespace Scripts
         private float _currentMaxSeed;
 
         [Space(10f)]
-        [Header("Movement Stats")]
+        [Header("Status Stats")]
         [Space(5f)]
         [SerializeField] private float _maxHunger;
         [SerializeField] private float _hungerDepleationRate;
@@ -25,8 +25,8 @@ namespace Scripts
         [SerializeField] private float _depleationSpeed;
         [SerializeField] private AgentStat _agentStat;
 
-        [SerializeField]private float _hungerLevel;
-        [SerializeField]private float _energyLevel;
+        private float _hungerLevel;
+        private float _energyLevel;
         public AgentStat AgentStat => _agentStat;
         public Color HungryColor => _hungryColor;
         public Color TiredColor => _tiredColor;
@@ -41,6 +41,17 @@ namespace Scripts
         public Color NormalColor => _normalColor;
         private ISeedRandom _random;
         private Renderer _renderer;
+        private int _explosionRadius;
+        public int ExplosionRadius
+        {
+            get => _explosionRadius;
+
+            set
+            {
+                if (value <= 3) _explosionRadius = value;
+                else            _explosionRadius = 3;
+            }
+        }
 
         private void Awake()
         {
@@ -69,6 +80,8 @@ namespace Scripts
                 {
                     if (subtract)   _hungerLevel -= _hungerDepleationRate;
                     else            _hungerLevel += _hungerDepleationRate * 2;
+
+                    if (_hungerLevel > 100) _hungerLevel = 100f;
                 }
 
                 yield return _wfsChange;
@@ -94,6 +107,8 @@ namespace Scripts
                 {
                     if (subtract)   _energyLevel -= _energyDepleationRate;
                     else            _energyLevel += _energyDepleationRate * 2;
+
+                    if (_energyLevel > 100) _energyLevel = 100;
                 }
 
                 yield return _wfsChange;

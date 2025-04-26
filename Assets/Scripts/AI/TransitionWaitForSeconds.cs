@@ -4,20 +4,22 @@ using Scripts.AI.FSMs.UnityIntegration;
 
 namespace Scripts.AI
 {
-    [CreateAssetMenu(fileName = "TransitionCheckAgentStat", menuName = "State Machines/TransitionCheckAgentStat")]
-    public class TransitionCheckAgentStat : TransitionAbstract
+    [CreateAssetMenu(fileName = "TransitionWaitForSeconds", menuName = "State Machines/TransitionWaitForSeconds")]
+    public class TransitionWaitForSeconds : TransitionAbstract
     {
-        public  AgentStat Stat;
+        public  float _seconds;
+        private float _timeElapsed;
         private GameObject gameObject;
         private AgentStatsController _agent;
 
         protected override void Action()
         {
-            Debug.Log($"The agent is {Stat}");
+            Debug.Log($"{_seconds} seconds passed.");
         }
         protected override bool Condition()
         {
-            return _agent.AgentStat == Stat;
+            _timeElapsed += Time.deltaTime;
+            return _timeElapsed == _seconds;
         }
         public override void IntantiateTransition()
         {
