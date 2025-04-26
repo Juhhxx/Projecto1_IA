@@ -128,9 +128,6 @@ public abstract class Structure<T> : MonoBehaviour where T : Structure<T>
         return fallback;*/
     }
 
-    public void StayInSpot(long placeRef) => _placeDict[placeRef]++;
-    public void LeaveSpot(long placeRef) => _placeDict[placeRef]--;
-
     /// <summary>
     /// Check crowd to see if number of agents in tile is or poly is above _tooManyAgents
     /// </summary>

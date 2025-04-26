@@ -1,7 +1,11 @@
 using System;
 using System.Collections;
+using DotRecast.Core.Numerics;
+using DotRecast.Detour.Crowd;
+using Scripts.Pathfinding;
 using Scripts.Random;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 namespace Scripts
 {
@@ -24,6 +28,17 @@ namespace Scripts
         [SerializeField] private Color _tiredColor;
         [SerializeField] private float _depleationSpeed;
         [SerializeField] private AgentStat _agentStat;
+
+        [SerializeField] private float _acceptedDist = 2f;
+        public float AcceptedDist => _acceptedDist;
+        private DtCrowdAgent _agentID;
+        public DtCrowdAgent ID => _agentID;
+        [SerializeField] private DRCrowdManager _crowd;
+        public DRCrowdManager Crowd => _crowd;
+
+        public (RcVec3f Pos, long Ref) LastRef { get; set; }
+        public (RcVec3f Pos, long Ref) CurRef { get; set; }
+        public (RcVec3f Pos, long Ref) NextRef { get; set; }
 
         private float _hungerLevel;
         private float _energyLevel;
@@ -62,9 +77,49 @@ namespace Scripts
             _wfsUpdate      = new WaitForSeconds(1f);
         }
 
-        private void OnEnbale()
+        public void Activate()
         {
             ChooseRandomState();
+
+            Exit.GetRandomGoodExit( _crowd.Rand.Range(0, 32), out (RcVec3f, long) pos);
+            LastRef = pos;
+
+            transform.position = _crowd.SnapToNavMesh(pos.Item1);;
+            
+            _agentID = _crowd.AddAgent(transform.position, false);
+            _crowd.SwitchToNormal(_agentID);
+        }
+
+        private long _lastPolyRef = 0;
+        private void Update()
+        {
+            long currPolyRef = _agentID.corridor.GetFirstPoly();
+
+            if (currPolyRef != _lastPolyRef)
+            {
+                _lastPolyRef = currPolyRef;
+                if ( _crowd.Explosion.PolyHasFire(_lastPolyRef) )
+                    Deactivate();
+            }
+        }
+        public void UpdateOrdered()
+        {
+            Profiler.BeginSample("DR Agent");
+
+            if ( _agentID != null )
+            {
+                transform.position = DRcHandle.ToUnityVec3(_agentID.npos);
+                if ( _agentID.vel.Length() > 0.1f )
+                    transform.rotation = DRcHandle.ToDotQuat(_agentID.vel);
+            }
+        }
+
+        private void Deactivate()
+        {
+            _crowd.RemoveAgent(_agentID);
+            _agentID = null;
+            
+            gameObject.SetActive(false);
         }
 
         public void ChooseRandomState()
@@ -201,6 +256,21 @@ namespace Scripts
         public void ChangeColor(Color color)
         {
             _renderer.material.color = color;
+        }
+
+        #if UNITY_EDITOR
+        public void SetRefs(DRCrowdManager manager)
+        {
+            _crowd = manager;
+        }
+        #endif
+
+        public override string ToString()
+        {
+            if (_agentID == null)
+                return $"null";
+
+            return $"[DRAgent] Pos: {_agentID.npos} | Target: {_agentID.targetPos} | Vel: {_agentID.vel} | State: {_agentID.state} | TargetState: {_agentID.targetState} | Speed: {_agentID.desiredSpeed }";
         }
     }
 }

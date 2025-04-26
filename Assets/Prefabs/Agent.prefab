@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 6668798742838636289}
   - component: {fileID: 8038067621552411135}
   m_Layer: 0
-  m_Name: Cube
+  m_Name: Quad
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -96,13 +96,15 @@ GameObject:
   m_Component:
   - component: {fileID: 5078459277463046394}
   - component: {fileID: 810518433666018493}
+  - component: {fileID: 3853728234938254601}
+  - component: {fileID: 2450238958466189514}
   m_Layer: 0
   m_Name: Agent
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &5078459277463046394
 Transform:
   m_ObjectHideFlags: 0
@@ -131,6 +133,41 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d9d8465fca0b6d14ea4c38ab86a65d0d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _crowdManager: {fileID: 0}
+  _crowd: {fileID: 0}
+  <AgentState>k__BackingField: {fileID: 2450238958466189514}
   _acceptedDistToGoal: 6
   _stage: {fileID: 0}
+--- !u!114 &3853728234938254601
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8260415460449031451}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bad496f9f0acfd94aa2be936df7f0a50, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _stateMachineModel: {fileID: 11400000, guid: be1aff0339e94ed4baacfbc66302cc2a, type: 2}
+--- !u!114 &2450238958466189514
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8260415460449031451}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d18d228919984264eb111e23979e86a0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _maxSpeed: 5
+  _maxHunger: 100
+  _hungerDepleationRate: 2
+  _hungryColor: {r: 0.8679245, g: 0.3254717, b: 0, a: 0}
+  _maxEnergy: 100
+  _energyDepleationRate: 2
+  _tiredColor: {r: 0.18579161, g: 0.4379744, b: 0.76729554, a: 0}
+  _depleationSpeed: 0.5
+  _agentStat: 0
