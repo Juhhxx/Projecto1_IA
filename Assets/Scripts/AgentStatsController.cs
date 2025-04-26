@@ -60,13 +60,37 @@ namespace Scripts
             _random         = new SeedRandom(gameObject);
             _wfsChange      = new WaitForSeconds(_depleationSpeed);
             _wfsUpdate      = new WaitForSeconds(1f);
-            _hungerLevel    = _maxHunger;
-            _energyLevel    = _maxEnergy;
-
-            StartDepletingHunger();
-            StartDepletingEnergy();
+            
         }
 
+        public void ChooseRandomState()
+        {
+            AgentStat startingStat;
+
+            Array enumValues    = Enum.GetValues(typeof(AgentStat));
+            int enumLengh       = enumValues.Length;
+            startingStat        = (AgentStat)enumValues.GetValue(_random.Range(0, enumLengh));
+
+            if (startingStat == AgentStat.Hungry)
+            {
+                _hungerLevel = _maxHunger/2;
+                _energyLevel = _maxEnergy;
+            }
+            else if (startingStat == AgentStat.Tired)
+            {
+                _energyLevel = _maxEnergy/2;
+                _hungerLevel = _maxHunger;
+            }
+            else
+            {
+                _hungerLevel = _maxHunger;
+                _energyLevel = _maxEnergy;
+                StartDepletingHunger();
+                StartDepletingEnergy();
+            }
+
+            _agentStat = startingStat;
+        }
         private IEnumerator ChangeHunger(bool subtract)
         {
             bool parameter;
