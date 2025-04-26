@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using UnityEngine;
 using Scripts.AI.FSMs.BaseFiles;
 using Scripts.AI.FSMs.UnityIntegration;
@@ -14,6 +12,8 @@ namespace Scripts.AI
 
         protected override void EntryAction()
         {
+            _agent.Deactivate();
+
             Debug.Log($"Start State {Name}");
         }
         protected override void StateAction()

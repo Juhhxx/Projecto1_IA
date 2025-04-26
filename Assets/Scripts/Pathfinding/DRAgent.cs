@@ -1,6 +1,6 @@
 using DotRecast.Core.Numerics;
 using DotRecast.Detour.Crowd;
-using Scripts.Fire;
+using Scripts.Structure;
 using UnityEngine;
 using UnityEngine.Profiling;
 
@@ -8,10 +8,9 @@ namespace Scripts.Pathfinding
 {
     public class DRAgent : MonoBehaviour
     {
-        [SerializeField] private DRCrowdManager _crowdManager;
-        [SerializeField] private ExplosionManager _explosionManager;
+        [SerializeField] private DRCrowdManager _crowd;
         [field:SerializeField] public AgentStatsController AgentState { get; private set; }
-        [SerializeField] private float _acceptedDistToGoal = 2f;
+        // [SerializeField] private float _acceptedDistToGoal = 2f;
         private DtCrowdAgent _agentID;
         public DtCrowdAgent ID => _agentID;
 
@@ -23,14 +22,13 @@ namespace Scripts.Pathfinding
 
         public void Activate()
         {
-            _exit = Exit.GetRandomGoodExit( _crowdManager.Rand.Range(0, 32), out (RcVec3f, long) pos);
-            _exit.StayInSpot(pos.Item2);
+            _exit = Exit.GetRandomGoodExit( _crowd.Rand.Range(0, 32), out (RcVec3f, long) pos);
             _lastSpot = pos;
 
-            transform.position = _crowdManager.SnapToNavMesh(pos.Item1);;
+            transform.position = _crowd.SnapToNavMesh(pos.Item1);;
             
-            _agentID = _crowdManager.AddAgent(transform.position, false);
-            _crowdManager.SwitchToNormal(_agentID);
+            _agentID = _crowd.AddAgent(transform.position, false);
+            _crowd.SwitchToNormal(_agentID);
 
             // testing purposes, remove later
             // _stage = Stage.FindNearest(_agentID.npos);
@@ -41,7 +39,7 @@ namespace Scripts.Pathfinding
 
         public void Deactivate()
         {
-            _crowdManager.RemoveAgent(_agentID);
+            _crowd.RemoveAgent(_agentID);
             _agentID = null;
             
             gameObject.SetActive(false);
@@ -51,7 +49,7 @@ namespace Scripts.Pathfinding
         {
             Profiler.BeginSample("DRC Agent");
 
-            if ( _exit != null && RcVec3f.Distance(_agentID.npos, _lastSpot.Item1) > _acceptedDistToGoal && _stage.EnteredArea(_agentID.npos) )
+            /* if ( _exit != null && RcVec3f.Distance(_agentID.npos, _lastSpot.Item1) > _acceptedDistToGoal && _stage.EnteredArea(_agentID.npos) )
             {
                 _exit.LeaveSpot( _lastSpot.Item2 ); // only supposed to run one time
 
@@ -61,7 +59,7 @@ namespace Scripts.Pathfinding
                 {
                     Debug.Log("Exited exit " + RcVec3f.Distance(_agentID.npos, _lastSpot.Item1));
                     _nextSpot = _stage.GetBestSpot(_agentID.npos);
-                    _crowdManager.SetTarget(_agentID, _nextSpot.Item2, _nextSpot.Item1);
+                    _crowd.SetTarget(_agentID, _nextSpot.Item2, _nextSpot.Item1);
                     _exit = null;
                 }
             }
@@ -79,10 +77,10 @@ namespace Scripts.Pathfinding
                     }
 
                     _nextSpot = _stage.GetBestSpot(_agentID.npos);
-                    _crowdManager.SetTarget(_agentID, _nextSpot.Item2, _nextSpot.Item1);
+                    _crowd.SetTarget(_agentID, _nextSpot.Item2, _nextSpot.Item1);
                 }
                 
-            }
+            }*/ 
 
             // use DtCrowdNeighbour to alarm other agents of panic
 
@@ -102,7 +100,7 @@ namespace Scripts.Pathfinding
             if (currPolyRef != _lastPolyRef)
             {
                 _lastPolyRef = currPolyRef;
-                if ( _explosionManager.PolyHasFire(_lastPolyRef) )
+                if ( _crowd.Explosion.PolyHasFire(_lastPolyRef) )
                     Deactivate();
             }
         }
@@ -138,7 +136,7 @@ namespace Scripts.Pathfinding
         #if UNITY_EDITOR
         public void SetRefs(DRCrowdManager manager)
         {
-            _crowdManager = manager;
+            _crowd = manager;
         }
         #endif
 

@@ -12,11 +12,9 @@ using DotRecast.Detour.Io;
 using DotRecast.Core;
 using Scripts.Pathfinding.DotRecast;
 using UnityEngine.Profiling;
-using UnityEngine.SceneManagement;
 using System.Linq;
 using UniRecast.Toolsets;
-using UniRecast.Editor;
-using DotRecast.Recast.Toolset;
+using Scripts.Structure;
 
 namespace Scripts.Pathfinding
 {
@@ -89,7 +87,7 @@ namespace Scripts.Pathfinding
             Exit.AwakeOrdered();
             FoodArea.AwakeOrdered();
             GreenSpace.AwakeOrdered();
-            Stage.AwakeOrdered();
+            Structure.Stage.AwakeOrdered();
         }
 
         private Transform[] _volumes;

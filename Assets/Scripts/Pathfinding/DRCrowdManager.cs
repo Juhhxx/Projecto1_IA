@@ -6,6 +6,7 @@ using DotRecast.Detour.Crowd;
 using Scripts.Fire;
 using Scripts.Pathfinding.DotRecast;
 using Scripts.Random;
+using Scripts.Structure;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Profiling;
@@ -15,16 +16,16 @@ namespace Scripts.Pathfinding
     public class DRCrowdManager : Manager
     {
         [SerializeField] private DRcHandle _handle;
-        [SerializeField] private ExplosionManager _explosionManager;
+        [field:SerializeField] public ExplosionManager Explosion { get; private set; }
 
         [SerializeField] private int _AgentsPerUpdateBatch = 500;
         [SerializeField] private int _maxAgents = 100;
 
         // for object pooling
         [SerializeField] private GameObject _agentPrefab;
-        [SerializeField] private DRAgent[] _agents;
-        private IList<DRAgent> _activeAgents;
-        private IList<DRAgent> _inactiveAgents;
+        [SerializeField] private AgentStatsController[] _agents;
+        private IList<AgentStatsController> _activeAgents;
+        private IList<AgentStatsController> _inactiveAgents;
         [field:SerializeField] public Renderer BoundBox { get; private set; }
 
         public ISeedRandom Rand { get; private set; }
@@ -57,7 +58,7 @@ namespace Scripts.Pathfinding
 
         internal protected override void AwakeOrdered()
         {
-            _activeAgents = new List<DRAgent>();
+            _activeAgents = new List<AgentStatsController>();
             _inactiveAgents = _agents.ToList();
 
             _polyAgentCounts = new Dictionary<long, int>(ExplosionManager.PolyNum);
@@ -67,11 +68,11 @@ namespace Scripts.Pathfinding
             if ( _handle == null )
                 _handle = FindFirstObjectByType<DRcHandle>();
 
-            if ( _explosionManager == null )
-                _explosionManager = FindFirstObjectByType<ExplosionManager>();
+            if ( Explosion == null )
+                Explosion = FindFirstObjectByType<ExplosionManager>();
 
-            RegularFilter = new DtQueryRegularFilter(_explosionManager);
-            PanicFilter = new DtQueryPanicFilter(_explosionManager);
+            RegularFilter = new DtQueryRegularFilter(Explosion);
+            PanicFilter = new DtQueryPanicFilter(Explosion);
 
             _crowd = new DtCrowd(
                 new DtCrowdConfig(radius),
@@ -162,7 +163,7 @@ namespace Scripts.Pathfinding
 
             if ( Exit.AnyExitUnoccupied() )
             {
-                DRAgent agent = _inactiveAgents.FirstOrDefault();
+                AgentStatsController agent = _inactiveAgents.FirstOrDefault();
 
                 if ( agent != null )
                 {
@@ -225,14 +226,14 @@ namespace Scripts.Pathfinding
             float fearRadiusSq = fearRadius * fearRadius;
             float panicRadiusSq = panicRadius * panicRadius;
 
-            foreach (DRAgent agent in _activeAgents)
+            foreach (AgentStatsController agent in _activeAgents)
             {
                 float distSq =
                     (agent.ID.npos.X - center.X) * (agent.ID.npos.X - center.X) +
                     (agent.ID.npos.Z - center.Z) * (agent.ID.npos.Z - center.Z);
 
                 if (distSq <= deathRadiusSq)
-                    agent.Deactivate();
+                    agent.ExplosionRadius = 1;
                 
                 else if (distSq <= fearRadiusSq)
                 {
@@ -245,15 +246,15 @@ namespace Scripts.Pathfinding
             }
         }
         
-        public void CheckForPanic(DRAgent agent, float checkRadius)
+        public void CheckForPanic(AgentStatsController agent, float checkRadius)
         {
             float deathRadiusSq = checkRadius * checkRadius;
             float x = agent.ID.npos.X;
             float z = agent.ID.npos.Z;
 
-            foreach (DRAgent a in _activeAgents)
+            foreach (AgentStatsController a in _activeAgents)
             {
-                if ( a.AgentState.ExplosionRadius != 1 ) return;
+                if ( a.ExplosionRadius != 1 ) return;
 
                 float distSq =
                     ( x - a.ID.npos.X) * ( x - a.ID.npos.X) +
@@ -268,27 +269,28 @@ namespace Scripts.Pathfinding
         }
 
         /// <summary>
+        /// warn given agent to paralyze and set their movement to paralyze params
+        /// </summary>
+        /// <param name="agent"></param>
+        private void Paralyze(AgentStatsController agent)
+        {
+            agent.ExplosionRadius = 1;
+
+            _crowd.UpdateAgentParameters(agent.ID, _paralyzedParams);
+        }
+
+        /// <summary>
         /// Call after finished with paralyze, fire, or explosion range
         /// </summary>
         /// <param name="agent"></param>
-        public void Panic(DRAgent agent)
+        public void Panic(AgentStatsController agent)
         {
             // warn all in range agents to panic
-            agent.AgentState.ExplosionRadius = 1;
+            agent.ExplosionRadius = 2;
 
             _crowd.UpdateAgentParameters(agent.ID, _panicParams);
         }
 
-        /// <summary>
-        /// warn given agent to paralyze and set their movement to paralyze params
-        /// </summary>
-        /// <param name="agent"></param>
-        private void Paralyze(DRAgent agent)
-        {
-            agent.AgentState.ExplosionRadius = 1;
-
-            _crowd.UpdateAgentParameters(agent.ID, _paralyzedParams);
-        }
 
         /// <summary>
         /// Only called on object pool activation, as long as agents dont exit panic paralyze and death states
@@ -317,7 +319,7 @@ namespace Scripts.Pathfinding
             List<long> resultRefs = _handle.PolysInCircle(startRef, nearest, radius);
 
             foreach ( long polyRef in resultRefs )
-                if ( _explosionManager.PolyHasFire(polyRef) )
+                if ( Explosion.PolyHasFire(polyRef) )
                 {
                     fireSource = _handle.NavMeshData.GetPolyCenter(polyRef);
                     return true;
@@ -336,7 +338,7 @@ namespace Scripts.Pathfinding
         #if UNITY_EDITOR
         internal protected override void Bake()
         {
-            _agents = new DRAgent[_maxAgents];
+            _agents = new AgentStatsController[_maxAgents];
 
             while (transform.childCount > 0)
                 DestroyImmediate(transform.GetChild(0));
@@ -346,7 +348,7 @@ namespace Scripts.Pathfinding
                 GameObject newAgent =  (GameObject) PrefabUtility.InstantiatePrefab (_agentPrefab, transform);
 
             
-                if ( newAgent.TryGetComponent(out DRAgent dr) )
+                if ( newAgent.TryGetComponent(out AgentStatsController dr) )
                     _agents[i] = dr;
                 else
                 {
