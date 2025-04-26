@@ -6,14 +6,23 @@ using UnityEngine;
 
 namespace Scripts.Structure
 {
+    /// <summary>
+    /// GreenSpace is an open area, points are set within it.
+    /// </summary>
     public class GreenSpace : Structure<GreenSpace>
     {
-        [field:SerializeField] private Renderer _area;
         [SerializeField] private float _spacing = 8f;
+
+        /// <summary>
+        /// Sets up points inside the area of the green space.
+        /// </summary>
         protected override void SetUpPoints()
         {
+            // Calculate the size of the GreenSpace based on its lossy (world) scale.
+            // Multiplying by 10 assumes a base 10x10 area scaled by the object's transform.
             Vector3 size = new Vector3(10 * transform.lossyScale.x, 0, 10 * transform.lossyScale.z);
 
+            // Determine how many points fit horizontally (X) and vertically (Z) based on spacing
             int stepsX = Mathf.FloorToInt(size.x / _spacing);
             int stepsZ = Mathf.FloorToInt(size.z / _spacing);
 
@@ -29,6 +38,7 @@ namespace Scripts.Structure
             {
                 for (int z = 0; z <= stepsZ; z++)
                 {
+                    // The point in world position to be used by navmesh
                     worldPos = start
                         + (transform.right * (x * _spacing))
                             + (transform.forward * (z * _spacing));
@@ -39,9 +49,6 @@ namespace Scripts.Structure
             }
 
             _places = samplePoints.ToArray();
-
-            foreach ((RcVec3f, long) pos in samplePoints)
-                _positions.Add(DRcHandle.ToUnityVec3(pos.Item1));
         }
     }
 }

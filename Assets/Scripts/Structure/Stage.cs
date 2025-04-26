@@ -6,22 +6,31 @@ using UnityEngine;
 
 namespace Scripts.Structure
 {
+    /// <summary>
+    /// Stage is a concert hall, so points should be set at the front of it.
+    /// </summary>
     public class Stage : Structure<Stage>
     {
-        [field:SerializeField] private Renderer _area;
         [SerializeField] private float _spacing = 3f;
+
+        /// <summary>
+        /// Stage sets up its points in a line in its forward direction.
+        /// </summary>
         protected override void SetUpPoints()
         {
+            // Find the center of the front edge (halfway along the local Z axis, forward direction)
             Vector3 forward = transform.position + transform.forward * transform.localScale.z / 2f;
             Vector3 rightOffset = transform.right * transform.localScale.x / 2f;
 
             forward.z -= 1.2f;
 
+            // start and end of the line to get points at. In world position.
             Vector3 edgeA = forward + rightOffset;
             Vector3 edgeB = forward - rightOffset;
 
             Debug.DrawLine(edgeA, edgeB, Color.yellow, float.MaxValue);
 
+            // Spacing, space between each sample, sets the amount of samples aloud 
             int samples = Mathf.Max(1, Mathf.RoundToInt(Vector3.Distance(edgeA, edgeB) / _spacing));
 
             HashSet<(RcVec3f, long)> samplePoints = new();
@@ -36,9 +45,6 @@ namespace Scripts.Structure
             }
 
             _places = samplePoints.ToArray();
-
-            foreach ( (RcVec3f, long) pos in samplePoints )
-                _positions.Add( DRcHandle.ToUnityVec3(pos.Item1) );
         }
     }
 }

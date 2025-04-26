@@ -3,11 +3,15 @@ using DotRecast.Core.Numerics;
 using Scripts.Pathfinding;
 using Scripts.Random;
 using UnityEngine;
-using UnityEngine.Profiling;
 
 
 namespace Scripts.Structure
 {
+    /// <summary>
+    /// Abstract class defining a Structure that agents may want to interact with.
+    /// Subclasses represent specific structure types.
+    /// </summary>
+    /// <typeparam name="T">The type of structure inheriting from this class.</typeparam>
     public abstract class Structure<T> : MonoBehaviour where T : Structure<T>
     {
         [SerializeField] private float _radius = 10f;
@@ -25,21 +29,31 @@ namespace Scripts.Structure
 
         protected ISeedRandom _rand;
 
+        /// <summary>
+        /// Initializes all structure instances at once.
+        /// Needs to be called in a defined order externally, DRcHandle
+        /// </summary>
         public static void AwakeOrdered()
         {
             foreach (T structure in _structures)
                 structure.StartStructure();
         }
 
+        /// <summary>
+        /// Regular Mono behavior awake, runs before any other Mono behavior per project settings.
+        /// </summary>
         private void Awake()
         {
             if (this is T type)
                 _structures.Add(type);
         }
+
+        /// <summary>
+        /// Sets up structure specif reference points that agents will swarm to.
+        /// </summary>
         private void StartStructure()
         {
             _rand = new SeedRandom(gameObject);
-            _positions = new HashSet<Vector3>();
             _placeDict = new Dictionary<long, int>();
 
             DRcHandle.FindNearest(_pivot.position, out long nearestRef, out RcVec3f nearestPt, out _);
@@ -52,6 +66,11 @@ namespace Scripts.Structure
                 _placeDict[y.Item2] = 0;
         }
 
+        /// <summary>
+        /// Finds the nearest structure of type T to a given position.
+        /// </summary>
+        /// <param name="pos">The world position to search from.</param>
+        /// <returns>The closest structure of type T.</returns>
         public static T FindNearest(RcVec3f pos)
         {
             if (_structures.Count == 0)
@@ -77,85 +96,79 @@ namespace Scripts.Structure
             return chosen;
         }
 
+        /// <summary>
+        /// Sets up specific sample points for the structure.
+        /// Must be implemented by each subclass.
+        /// </summary>
         protected abstract void SetUpPoints();
 
+        /// <summary>
+        /// Checks whether a given position has entered this structure's zone.
+        /// </summary>
+        /// <param name="pos">The position to check.</param>
+        /// <returns>True if inside the structure radius; otherwise, false.</returns>
         public bool EnteredArea(RcVec3f pos)
         {
             return RcVec3f.Distance(pos, Position) < _radius;
         }
 
         /// <summary>
-        /// check if a near random place from _places is good spot until it chooses one
+        /// Attempts to find a good spot for an agent to move to.
+        /// If no good spot is found after several tries, selects a closer structure.
         /// </summary>
-        /// <param name="pos"></param>
-        /// <returns></returns>
-        public (RcVec3f, long) GetBestSpot(RcVec3f pos)
+        /// <param name="pos">Current agent position.</param>
+        /// <param name="structure">Reference to the current structure, which may be updated.</param>
+        /// <returns>Tuple containing the selected position and its polygon reference.</returns>
+        public (RcVec3f, long) GetBestSpot(RcVec3f pos, ref Structure<T> structure)
         {
+            // Pick a random spot using triangular distribution
             (RcVec3f, long) next = _places[ _rand.Triangular(0, _places.Length) ];
 
-            Debug.DrawLine(DRcHandle.ToUnityVec3(pos), DRcHandle.ToUnityVec3(_places[_rand.Triangular(0, _places.Length)].Item1));
+            Debug.DrawLine(DRcHandle.ToUnityVec3(pos), DRcHandle.ToUnityVec3(next.Item1));
 
             for ( int i = 0; i < _tries ; i++ )
             {
-                if ( IsGoodSpot(next.Item2) )
+                if ( IsGoodSpot(next.Item2) ) // return if found good spot
                     return next;
                 next = _places[ _rand.Triangular(0, _places.Length) ];
             }
-            return next;
 
-            /*int len = _places.Length/2;
-            int start = random % len;
+            // If no good spot found, try finding a better structure
+            T chosen = _structures[0];
+            float minDist = RcVec3f.Distance(pos, chosen.Position);
+            float dist;
 
-            (RcVec3f, long) fallback = _places[0];
-            float minDist = RcVec3f.Distance(pos, fallback.Item1);
-
-            int index;
-            (RcVec3f, long) next;
-
-            for (int i = 0; i < len; i++)
+            foreach (T struc in _structures)
             {
-                index = (start + i * 73) % len;
-                next = _places[index];
+                if ( structure == chosen ) continue;
 
-                if ( IsGoodSpot(next.Item2) )
-                    return next;
+                dist = RcVec3f.Distance(pos, structure.Position);
 
-                float dist = RcVec3f.Distance(pos, next.Item1);
-                if (dist < minDist)
+                if ( dist < minDist ) // if the distance is smaller than last
                 {
-                    fallback = next;
                     minDist = dist;
+                    chosen = struc;
                 }
             }
 
-            return fallback;*/
+            structure = chosen;
+            return (structure.Position, structure.Ref);
         }
 
         /// <summary>
-        /// Check crowd to see if number of agents in tile is or poly is above _tooManyAgents
+        /// Checks if a navmesh polygon has space available for more agents.
         /// </summary>
-        /// <param name="polyId"> The poly reference </param>
-        /// <returns> If its a good spot </returns>
+        /// <param name="polyRef">The polygon reference ID to check.</param>
+        /// <returns>True if the number of agents is below the limit; otherwise, false.</returns>
         public bool IsGoodSpot(long polyRef)
         {
-            if ( DRCrowdManager.AgentCountAt(polyRef) > 0 ) Debug.Log("Agent count at is " + DRCrowdManager.AgentCountAt(polyRef));
-            return  DRCrowdManager.AgentCountAt(polyRef) < _tooManyAgents; // _placeDict.TryGetValue(polyRef, out int count) && count < _tooManyAgents;
+            return  DRCrowdManager.AgentCountAt(polyRef) < _tooManyAgents;
         }
 
-
-        protected HashSet<Vector3> _positions;
-
-        #if UNITY_EDITOR
-        private void OnDrawGizmosSelected()
-        {
-            Gizmos.DrawWireSphere(_pivot.position, _radius);
-
-            if ( _positions != null )
-                foreach (Vector3 pos in _positions)
-                    Gizmos.DrawSphere(pos, 0.5f);
-        }
-        #endif
-
+        /// <summary>
+        /// Returns the name of the structure for logging or debugging purposes.
+        /// </summary>
+        /// <returns>The structure's name as a string.</returns>
         public override string ToString()
         {
             return $"Structure {gameObject.name}";

@@ -4,9 +4,16 @@ using UnityEngine;
 
 namespace Scripts.Structure
 {
+    /// <summary>
+    /// Represents a FoodArea where points are placed at each table's location.
+    /// </summary>
     public class FoodArea : Structure<FoodArea>
     {
         [field:SerializeField] private Transform[] _tables;
+
+        /// <summary>
+        /// Sets up points at each table's position within the FoodArea.
+        /// </summary>
         protected override void SetUpPoints()
         {
             _places = new (RcVec3f, long)[_tables.Length];
@@ -16,9 +23,6 @@ namespace Scripts.Structure
                 if ( DRcHandle.FindNearest(_tables[i].position, out long polyRef, out RcVec3f polyPos, out _).Succeeded() &&  polyRef  != 0 )
                     _places[i] = (polyPos, polyRef);
             }
-
-            foreach ( (RcVec3f, long) pos in _places )
-                _positions.Add( DRcHandle.ToUnityVec3( pos.Item1) );
         }
     }
 }
