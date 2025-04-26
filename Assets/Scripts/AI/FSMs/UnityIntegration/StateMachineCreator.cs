@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using Scripts.AI.FSMs.BaseFiles;
+using NaughtyAttributes;
 
 namespace Scripts.AI.FSMs.UnityIntegration
 {
@@ -16,8 +17,9 @@ namespace Scripts.AI.FSMs.UnityIntegration
         // Reference to the Game Object that the State Machine affects.
         private GameObject _objectReference;
         // Reference to the Initial State of the State Machine.
-        public StateAbstract InitialState;
+        private StateAbstract _initialState;
         // List of references to State Transitions.
+        [Tooltip("List with all the States, and respective Transitions, for the State Machine.\nTip : The 1st State on the list will be the initial State.")]
         public List<StateTransition> StateTransitions;
         
         /// <summary>
@@ -25,8 +27,6 @@ namespace Scripts.AI.FSMs.UnityIntegration
         /// </summary>
         private void InstantiateStates()
         {
-            InitialState.SetObjectReference(_objectReference);
-            InitialState.InstantiateState();
             // Instantiate all States.
             foreach (StateTransition st in StateTransitions)
             {
@@ -61,8 +61,8 @@ namespace Scripts.AI.FSMs.UnityIntegration
         public void InstantiateStateMachine()
         {
             InstantiateStates();
-            Debug.Log($"Instantiating State Machine : {InitialState.State == null}");
-            _stateMachine = new StateMachine(InitialState.State);
+            _initialState = StateTransitions[0].State;
+            _stateMachine = new StateMachine(_initialState.State);
         }
         /// <summary>
         /// method for running the State Machine.
@@ -82,10 +82,6 @@ namespace Scripts.AI.FSMs.UnityIntegration
 
             // New State Machine Asset.
             StateMachineCreator newSM = Instantiate(this);
-
-            // Create a copy of the Initial State and store it in the instances Dictionary.
-            newSM.InitialState = InitialState.CreateState();
-            instances.Add(newSM.InitialState.name,newSM.InitialState);
 
             // Create a new List of StateTransitions.
             newSM.StateTransitions = new List<StateTransition>();
