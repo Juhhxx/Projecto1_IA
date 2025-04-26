@@ -69,11 +69,14 @@ namespace Scripts
             }
         }
 
+        public void AwakeOrdered()
+        {
+            _random = new SeedRandom(gameObject);
+        }
         private void Awake()
         {
             _renderer       = GetComponentInChildren<Renderer>();
             _normalColor    = _renderer.material.color;
-            _random         = new SeedRandom(gameObject);
             _wfsChange      = new WaitForSeconds(_depleationSpeed);
             _wfsUpdate      = new WaitForSeconds(1f);
         }

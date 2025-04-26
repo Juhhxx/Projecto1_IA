@@ -89,6 +89,9 @@ namespace Scripts.Pathfinding
                 i => i == 0 ? RegularFilter : i == 1 ? PanicFilter : new DtQueryDefaultFilter()
             );
 
+            foreach ( AgentStatsController agent in _agents )
+                agent.AwakeOrdered();
+
             InitializeAgentParams();
         }
 
