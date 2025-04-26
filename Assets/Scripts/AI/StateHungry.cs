@@ -50,7 +50,7 @@ namespace Scripts.AI
             {
                 if ( _food.EnteredArea( _agent.ID.npos ) )
                 {
-                    _agent.NextRef = _food.GetBestSpot( _agent.ID.npos );
+                    _agent.NextRef = _food.GetBestSpot( _agent.ID.npos,  ref _food);
                     _agent.Crowd.SetTarget(_agent.ID, _agent.NextRef.Ref, _agent.NextRef.Pos);
                     _food = null;
                 }
@@ -62,7 +62,7 @@ namespace Scripts.AI
             }
             if ( _agent.ID.vel.Length() < 0.1f )
             {
-                _agent.NextRef = _food.GetBestSpot( _agent.ID.npos );
+                _agent.NextRef = _food.GetBestSpot( _agent.ID.npos,  ref _food);
                 _agent.Crowd.SetTarget(_agent.ID, _agent.NextRef.Ref, _agent.NextRef.Pos);
             }
 

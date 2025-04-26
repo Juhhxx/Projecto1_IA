@@ -44,7 +44,7 @@ namespace Scripts.AI
             {
                 if ( _exit.EnteredArea( _agent.ID.npos ) )
                 {
-                    _agent.NextRef = _exit.GetBestSpot( _agent.ID.npos );
+                    _agent.NextRef = _exit.GetBestSpot( _agent.ID.npos, ref _exit );
                     _agent.Crowd.SetTarget(_agent.ID, _agent.NextRef.Ref, _agent.NextRef.Pos);
                     _exit = null;
                 }
@@ -56,7 +56,7 @@ namespace Scripts.AI
             }
             if ( _agent.ID.vel.Length() < 0.1f )
             {
-                _agent.NextRef = _exit.GetBestSpot( _agent.ID.npos );
+                _agent.NextRef = _exit.GetBestSpot( _agent.ID.npos, ref _exit );
                 _agent.Crowd.SetTarget(_agent.ID, _agent.NextRef.Ref, _agent.NextRef.Pos);
             }
 
