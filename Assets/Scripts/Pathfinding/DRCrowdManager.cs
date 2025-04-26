@@ -32,6 +32,7 @@ namespace Scripts.Pathfinding
         private DtCrowd _crowd;
         private DtCrowdAgentParams _normalParams;
         private DtCrowdAgentParams _panicParams;
+        private DtCrowdAgentParams _paralyzedParams;
 
         [Header("Agent Regular Parameters")]
         // agent radius, this also affects avoidance
@@ -107,12 +108,29 @@ namespace Scripts.Pathfinding
                 maxAcceleration = _normalParams.maxAcceleration,
                 obstacleAvoidanceType = _normalParams.obstacleAvoidanceType,
 
+
+                maxSpeed = maxPanicSpeed,
                 separationWeight = separationPanicWeight,
                 collisionQueryRange = collisionPanicQueryRange,
                 pathOptimizationRange = pathPanicOptimizationRange,
                 updateFlags = _normalParams.updateFlags,
-                queryFilterType = 1,
-                maxSpeed = maxPanicSpeed
+                queryFilterType = 1
+            };
+
+            _paralyzedParams = new DtCrowdAgentParams
+            {
+                radius = _normalParams.radius,
+                height = _normalParams.height,
+                maxAcceleration = 0,
+                obstacleAvoidanceType = _normalParams.obstacleAvoidanceType,
+
+
+                maxSpeed = 0,
+                separationWeight = separationPanicWeight,
+                collisionQueryRange = collisionPanicQueryRange,
+                pathOptimizationRange = pathPanicOptimizationRange,
+                updateFlags = _normalParams.updateFlags,
+                queryFilterType = 1
             };
         }
 
@@ -173,16 +191,6 @@ namespace Scripts.Pathfinding
             _crowd.RequestMoveTarget(agentId, targetRef, targetPos);
         }
 
-        public void SwitchToPanic(DtCrowdAgent agentId)
-        {
-            _crowd.UpdateAgentParameters(agentId, _panicParams);
-        }
-
-        public void SwitchToNormal(DtCrowdAgent agentId)
-        {
-            _crowd.UpdateAgentParameters(agentId, _normalParams);
-        }
-
         public Vector3 SnapToNavMesh(RcVec3f position)
         {
             DRcHandle.FindNearest(position, out _, out var nearest, out _);
@@ -209,6 +217,113 @@ namespace Scripts.Pathfinding
                     _polyAgentCounts[polyRef] = 1;
             }
             Profiler.EndSample();
+        }
+
+        public void ExplosionAt(RcVec3f center, float deathRadius, float fearRadius, float panicRadius)
+        {
+            float deathRadiusSq = deathRadius * deathRadius;
+            float fearRadiusSq = fearRadius * fearRadius;
+            float panicRadiusSq = panicRadius * panicRadius;
+
+            foreach (DRAgent agent in _activeAgents)
+            {
+                float distSq =
+                    (agent.ID.npos.X - center.X) * (agent.ID.npos.X - center.X) +
+                    (agent.ID.npos.Z - center.Z) * (agent.ID.npos.Z - center.Z);
+
+                if (distSq <= deathRadiusSq)
+                    agent.Deactivate();
+                
+                else if (distSq <= fearRadiusSq)
+                {
+                    Paralyze(agent);
+                }
+                else if (distSq <= panicRadiusSq)
+                {
+                    Panic(agent);
+                }
+            }
+        }
+        
+        public void CheckForPanic(DRAgent agent, float checkRadius)
+        {
+            float deathRadiusSq = checkRadius * checkRadius;
+            float x = agent.ID.npos.X;
+            float z = agent.ID.npos.Z;
+
+            foreach (DRAgent a in _activeAgents)
+            {
+                if ( a.AgentState.ExplosionRadius != 1 ) return;
+
+                float distSq =
+                    ( x - a.ID.npos.X) * ( x - a.ID.npos.X) +
+                    ( z - a.ID.npos.Z) * ( z - a.ID.npos.Z);
+
+                if (distSq <= deathRadiusSq)
+                {
+                    Panic(agent);
+                    return;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Call after finished with paralyze, fire, or explosion range
+        /// </summary>
+        /// <param name="agent"></param>
+        public void Panic(DRAgent agent)
+        {
+            // warn all in range agents to panic
+            agent.AgentState.ExplosionRadius = 1;
+
+            _crowd.UpdateAgentParameters(agent.ID, _panicParams);
+        }
+
+        /// <summary>
+        /// warn given agent to paralyze and set their movement to paralyze params
+        /// </summary>
+        /// <param name="agent"></param>
+        private void Paralyze(DRAgent agent)
+        {
+            agent.AgentState.ExplosionRadius = 1;
+
+            _crowd.UpdateAgentParameters(agent.ID, _paralyzedParams);
+        }
+
+        /// <summary>
+        /// Only called on object pool activation, as long as agents dont exit panic paralyze and death states
+        /// </summary>
+        /// <param name="agentId"></param>
+        public void SwitchToNormal(DtCrowdAgent agentId)
+        {
+            _crowd.UpdateAgentParameters(agentId, _normalParams);
+        }
+
+        /// <summary>
+        /// To be used by agents
+        /// </summary>
+        /// <param name="position"></param>
+        /// <param name="radius"></param>
+        /// <param name="fireSource"></param>
+        /// <returns></returns>
+        public bool LookForFire(RcVec3f position, float radius, out RcVec3f fireSource)
+        {
+            fireSource = RcVec3f.Zero;
+
+            DtStatus status = DRcHandle.FindNearest(position, out long startRef, out RcVec3f nearest, out _);
+            if ( status.Failed() )
+                return false;
+
+            List<long> resultRefs = _handle.PolysInCircle(startRef, nearest, radius);
+
+            foreach ( long polyRef in resultRefs )
+                if ( _explosionManager.PolyHasFire(polyRef) )
+                {
+                    fireSource = _handle.NavMeshData.GetPolyCenter(polyRef);
+                    return true;
+                }
+
+            return false;
         }
 
         public static int AgentCountAt(long polyRef)

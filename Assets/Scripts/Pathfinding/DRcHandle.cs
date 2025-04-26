@@ -245,6 +245,29 @@ namespace Scripts.Pathfinding
             return waypoints;
         }
 
+
+        private List<long> resultParents = new List<long>();
+        private List<float> resultCosts = new List<float>();
+        public List<long> PolysInCircle(long startRef, RcVec3f nearest, float radius)
+        {
+            List<long> resultRefs = new List<long>();
+
+            DtStatus status = NavQuery.FindPolysAroundCircle (
+                startRef,
+                nearest,
+                radius,
+                Filter,
+                ref resultRefs,
+                ref resultParents,
+                ref resultCosts
+            );
+
+            if ( status.Failed() )
+                return null;
+
+            return resultRefs;
+        }
+
         /// <summary>
         /// flip X, unity uses right-handed coordinate system but dotrecast uses left-handed
         /// </summary>

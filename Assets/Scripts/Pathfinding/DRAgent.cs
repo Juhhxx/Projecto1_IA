@@ -8,8 +8,10 @@ namespace Scripts.Pathfinding
     public class DRAgent : MonoBehaviour
     {
         [SerializeField] private DRCrowdManager _crowdManager;
+        [field:SerializeField] public AgentStatsController AgentState { get; private set; }
         [SerializeField] private float _acceptedDistToGoal = 2f;
         private DtCrowdAgent _agentID;
+        public DtCrowdAgent ID => _agentID;
 
         [SerializeField] private Structure<Stage> _stage;
         private Structure<Exit> _exit;
@@ -26,7 +28,9 @@ namespace Scripts.Pathfinding
             transform.position = _crowdManager.SnapToNavMesh(pos.Item1);;
             
             _agentID = _crowdManager.AddAgent(transform.position, false);
+            _crowdManager.SwitchToNormal(_agentID);
 
+            // testing purposes, remove later
             _stage = Stage.FindNearest(_agentID.npos);
             _crowdManager.SetTarget(_agentID, _stage.Ref, _stage.Position);
 
