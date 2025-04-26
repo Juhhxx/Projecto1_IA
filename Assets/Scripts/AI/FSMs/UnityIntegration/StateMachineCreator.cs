@@ -51,7 +51,7 @@ namespace Scripts.AI.FSMs.UnityIntegration
             StateMachineCreator newSM = Instantiate(this);
 
             newSM.InitialState = InitialState.CreateState();
-            instances.Add(newSM.InitialState.Name,newSM.InitialState);
+            instances.Add(newSM.InitialState.name,newSM.InitialState);
 
             newSM.StateTransitions = new List<StateTransition>();
 
@@ -60,34 +60,34 @@ namespace Scripts.AI.FSMs.UnityIntegration
                 StateAbstract state;
                 List<TransitionAbstract> transitions = new List<TransitionAbstract>();
 
-                if (instances.ContainsKey(st.State.Name))
+                if (instances.ContainsKey(st.State.name))
                 {
-                    state = instances[st.State.Name] as StateAbstract;
+                    state = instances[st.State.name] as StateAbstract;
                 }
                 else
                 {
                     state = st.State.CreateState();
-                    instances.Add(st.State.Name,state);
+                    instances.Add(st.State.name,state);
                 }
 
                 foreach (TransitionAbstract t in st.Transitions)
                 {
-                    if (instances.ContainsKey(t.Name))
+                    if (instances.ContainsKey(t.name))
                     {
-                        transitions.Add(instances[t.Name] as TransitionAbstract);
+                        transitions.Add(instances[t.name] as TransitionAbstract);
                     }
                     else
                     {
                         TransitionAbstract transition = t.CreateTransition();
                         
-                        if (instances.ContainsKey(t.ToState.Name))
+                        if (instances.ContainsKey(t.ToState.name))
                         {
-                            transition.ToState = instances[t.ToState.Name] as StateAbstract;
+                            transition.ToState = instances[t.ToState.name] as StateAbstract;
                         }
                         else
                         {
-                            instances.Add(t.ToState.Name,t.ToState.CreateState());
-                            transition.ToState = instances[t.ToState.Name] as StateAbstract;
+                            instances.Add(t.ToState.name,t.ToState.CreateState());
+                            transition.ToState = instances[t.ToState.name] as StateAbstract;
                         }
 
                         transitions.Add(transition);

@@ -10,7 +10,6 @@ namespace Scripts.AI
         public  float _seconds;
         private float _timeElapsed;
         private GameObject gameObject;
-        private AgentStatsController _agent;
 
         protected override void Action()
         {
@@ -24,7 +23,6 @@ namespace Scripts.AI
         public override void IntantiateTransition()
         {
             gameObject = base.objectReference;
-            _agent = gameObject.GetComponent<AgentStatsController>();
 
             base.transition = new Transition(base.Name,Condition,base.ToState.State,Action);
         }
