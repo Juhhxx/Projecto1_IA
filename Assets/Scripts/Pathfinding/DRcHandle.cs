@@ -6,11 +6,9 @@ using UniRecast.Core;
 using DotRecast.Detour;
 using DotRecast.Core.Numerics;
 using System.Collections.Generic;
-using System;
 using System.IO;
 using DotRecast.Detour.Io;
 using DotRecast.Core;
-using Scripts.Pathfinding.DotRecast;
 using UnityEngine.Profiling;
 using System.Linq;
 using UniRecast.Toolsets;
@@ -18,34 +16,35 @@ using Scripts.Structure;
 
 namespace Scripts.Pathfinding
 {
+    /// <summary>
+    /// Central manager that handles NavMesh loading, queries, baking, and management of spatial data (snap zones, convex volumes).
+    /// </summary>
     public class DRcHandle : Manager
     {
 
         [SerializeField] private UniRcNavMeshSurface _navMesh;
-        [SerializeField] private float _agentHeight = 2f, _agentRadius = 0.6f;
+
         [SerializeField] private Vector3 _snapBoxSize;
+        private static RcVec3f _snapSize;
 
         [SerializeField] private Manager[] _managers;
-
-        private static RcVec3f _snapSize;
-        private static RcVec3f _agentSize;
 
         public static DtNavMeshQuery NavQuery { get; private set; }
         public DtNavMesh NavMeshData { get; private set; }
 
         public static IDtQueryFilter Filter { get; private set; }
 
-        private const int MAX_POLYS = 256; // max steps a path can have
-        private static DtFindPathOption _options;
-        private static IDtQueryHeuristic _heuristic;
+        private Transform[] _volumes;
+        private bool _started = false;
+        private List<long> resultParents = new List<long>();
+        private List<float> resultCosts = new List<float>();
 
+        /// <summary>
+        /// Unity's Awake method. Initializes navigation structures and custom area weighting.
+        /// </summary>
         private void Awake()
         {
             _snapSize = new RcVec3f(_snapBoxSize.x, _snapBoxSize.y, _snapBoxSize.z);
-            _agentSize = new RcVec3f(_agentRadius, _agentHeight, _agentRadius);
-
-            _heuristic = new DtQueryRegularHeuristic();
-            _options = new DtFindPathOption(_heuristic, 0, float.MaxValue);
 
             if (_navMesh == null)
                 _navMesh = FindFirstObjectByType<UniRcNavMeshSurface>();
@@ -59,10 +58,11 @@ namespace Scripts.Pathfinding
                 NavMeshData = _navMesh.GetNavMeshData();
             }
             
-
+            // Find all convex volumes in scene
             UniRcConvexVolumeTool[] volumes = FindObjectsByType<UniRcConvexVolumeTool>(FindObjectsSortMode.None);
             _volumes = volumes.Select(t => t.transform).ToArray();
 
+            // Assign weighted area to polys inside any volume manually
             for (int tileIndex = 0; tileIndex < NavMeshData.GetMaxTiles(); tileIndex++)
             {
                 DtMeshTile tile = NavMeshData.GetTile(tileIndex);
@@ -81,6 +81,8 @@ namespace Scripts.Pathfinding
             NavQuery = new DtNavMeshQuery(NavMeshData);
             Filter = new DtQueryDefaultFilter();
 
+            // Order-specific awakening
+
             foreach ( Manager m in _managers )
                 m.AwakeOrdered();
             
@@ -90,35 +92,31 @@ namespace Scripts.Pathfinding
             Structure.Stage.AwakeOrdered();
         }
 
-        private Transform[] _volumes;
+        /// <summary>
+        /// Checks if a given point is inside any convex volume (for assigning custom navmesh areas).
+        /// </summary>
         private bool InsideArea(RcVec3f point)
         {
-            Vector3 scale;
-            Vector3 worldPoint;
-            float radiusX;
-            float radiusZ;
-            float dx;
-            float dz;
+            Vector3 worldPoint = ToUnityVec3(point);
 
-            foreach ( Transform vol in _volumes)
+            foreach (Transform vol in _volumes)
             {
-                scale = vol.lossyScale;
+                Vector3 scale = vol.lossyScale;
+                float radiusX = scale.x * 0.5f;
+                float radiusZ = scale.z * 0.5f;
 
-                radiusX = scale.x * 0.5f;
-                radiusZ = scale.z * 0.5f;
+                float dx = (worldPoint.x - vol.position.x) / radiusX;
+                float dz = (worldPoint.z - vol.position.z) / radiusZ;
 
-                worldPoint = ToUnityVec3(point);
-
-                dx = (worldPoint.x - vol.position.x) / radiusX;
-                dz = (worldPoint.z - scale.z) / radiusZ;
-
-                return (dx * dx + dz * dz) <= 1.0f;
+                if ((dx * dx + dz * dz) <= 1.0f)
+                    return true;
             }
             return false;
         }
 
-        private bool _started = false;
-
+        /// <summary>
+        /// Unity's Start method. Calls StartOrdered for all managers.
+        /// </summary>
         private void Start()
         {
             foreach ( Manager m in _managers )
@@ -127,6 +125,9 @@ namespace Scripts.Pathfinding
         }
         internal protected override void StartOrdered() {}
 
+        /// <summary>
+        /// Loads a baked navmesh file from disk.
+        /// </summary>
         private DtNavMesh LoadNavMeshFromFile(string fileName)
         {
             string fullPath = Path.Combine(Application.dataPath, "..", fileName + ".bytes");
@@ -146,6 +147,9 @@ namespace Scripts.Pathfinding
 
         #if UNITY_EDITOR
         [ContextMenu("Bake NavMesh Into Scene")]
+        /// <summary>
+        /// Editor context menu: manually rebake the navmesh and reinitialize managers.
+        /// </summary>
         public void EditorBake()
         {
             if (_navMesh == null)
@@ -181,6 +185,9 @@ namespace Scripts.Pathfinding
                 m.UpdateOrdered();
         }
 
+        /// <summary>
+        /// Finds the nearest navmesh polygon to a given RcVec3f position.
+        /// </summary>
         public static DtStatus FindNearest(RcVec3f center, out long nearestRef, out RcVec3f nearestPt, out bool isOverPoly)
         {
             DtStatus result = NavQuery.FindNearestPoly(center, _snapSize, Filter, out nearestRef, out nearestPt, out isOverPoly);
@@ -191,6 +198,9 @@ namespace Scripts.Pathfinding
             return result;
         }
 
+        /// <summary>
+        /// Finds the nearest navmesh polygon to a given Unity Vector3 position.
+        /// </summary>
         public static DtStatus FindNearest(Vector3 center, out long nearestRef, out RcVec3f nearestPt, out bool isOverPoly)
         {
             RcVec3f newCenter = ToDotVec3(center);
@@ -201,6 +211,59 @@ namespace Scripts.Pathfinding
 
             return result;
         }
+
+        /// <summary>
+        /// Returns all polygons within a circular radius from a start reference.
+        /// </summary>
+        public List<long> PolysInCircle(long startRef, RcVec3f nearest, float radius)
+        {
+            List<long> resultRefs = new List<long>();
+
+            DtStatus status = NavQuery.FindPolysAroundCircle (
+                startRef,
+                nearest,
+                radius,
+                Filter,
+                ref resultRefs,
+                ref resultParents,
+                ref resultCosts
+            );
+
+            if ( status.Failed() )
+                return null;
+
+            return resultRefs;
+        }
+
+
+        /// flip X, unity uses right-handed coordinate system but dotrecast uses left-handed
+
+        /// <summary>
+        /// Converts a RcVec3f (DotRecast) vector into Unity's Vector3 (flipping X).
+        /// </summary>
+        public static Vector3 ToUnityVec3(RcVec3f vec) => new Vector3(-vec.X, vec.Y, vec.Z);
+        /// <summary>
+        /// Converts a Unity Vector3 into RcVec3f (flipping X).
+        /// </summary>
+        public static RcVec3f ToDotVec3(Vector3 vec) => new RcVec3f(-vec.x, vec.y, vec.z);
+        /// <summary>
+        /// Converts a RcVec3f vector into a Unity Quaternion facing the vector.
+        /// </summary>
+        public static Quaternion ToDotQuat(RcVec3f vec)
+        {
+            Vector3 dir = ToUnityVec3(vec);
+            return Quaternion.LookRotation(dir, Vector3.up);
+        }
+
+        internal protected override void AwakeOrdered() {}
+        internal protected override void Bake() {}
+        internal protected override void UpdateOrdered() {}
+    }
+}
+
+
+
+/* Test code
 
         // public DtStatus FindPath(long startRef, long endRef, RcVec3f startPos, RcVec3f endPos, IDtQueryFilter filter, ref List<long> path, DtFindPathOption fpo)
         // public virtual DtStatus FindStraightPath(RcVec3f startPos, RcVec3f endPos, List<long> path, int pathSize, Span<DtStraightPath> straightPath, out int straightPathCount, int maxStraightPath, int options)
@@ -242,45 +305,4 @@ namespace Scripts.Pathfinding
 
             return waypoints;
         }
-
-
-        private List<long> resultParents = new List<long>();
-        private List<float> resultCosts = new List<float>();
-        public List<long> PolysInCircle(long startRef, RcVec3f nearest, float radius)
-        {
-            List<long> resultRefs = new List<long>();
-
-            DtStatus status = NavQuery.FindPolysAroundCircle (
-                startRef,
-                nearest,
-                radius,
-                Filter,
-                ref resultRefs,
-                ref resultParents,
-                ref resultCosts
-            );
-
-            if ( status.Failed() )
-                return null;
-
-            return resultRefs;
-        }
-
-        /// <summary>
-        /// flip X, unity uses right-handed coordinate system but dotrecast uses left-handed
-        /// </summary>
-        /// <param name="vec"> vector3 to translate to dt's coordinates </param>
-        /// <returns> translated rc vec 3f </returns>
-        public static Vector3 ToUnityVec3(RcVec3f vec) => new Vector3(-vec.X, vec.Y, vec.Z);
-        public static RcVec3f ToDotVec3(Vector3 vec) => new RcVec3f(-vec.x, vec.y, vec.z);
-        public static Quaternion ToDotQuat(RcVec3f vec)
-        {
-            Vector3 dir = ToUnityVec3(vec);
-            return Quaternion.LookRotation(dir, Vector3.up);
-        }
-
-        internal protected override void AwakeOrdered() {}
-        internal protected override void Bake() {}
-        internal protected override void UpdateOrdered() {}
-    }
-}
+*/

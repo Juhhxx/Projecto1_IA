@@ -13,6 +13,11 @@ using UnityEngine.Profiling;
 
 namespace Scripts.Pathfinding
 {
+
+    /// <summary>
+    /// Manages crowd agents using DotRecast's navigation and simulation systems.
+    /// Handles agent pooling, movement updates, panic states, and explosion events.
+    /// </summary>
     public class DRCrowdManager : Manager
     {
         [SerializeField] private DRcHandle _handle;
@@ -26,7 +31,6 @@ namespace Scripts.Pathfinding
         [SerializeField] private AgentStatsController[] _agents;
         private IList<AgentStatsController> _activeAgents;
         private IList<AgentStatsController> _inactiveAgents;
-        [field:SerializeField] public Renderer BoundBox { get; private set; }
 
         public ISeedRandom Rand { get; private set; }
 
@@ -56,19 +60,24 @@ namespace Scripts.Pathfinding
         private IDtQueryFilter RegularFilter;
         private IDtQueryFilter PanicFilter;
 
+        private int _updateCursor = 0;
+        private static Dictionary<long, int> _polyAgentCounts;
+
+        /// <summary>
+        /// Initializes the crowd manager, agents, filters, and navigation handle.
+        /// </summary>
         internal protected override void AwakeOrdered()
         {
             _activeAgents = new List<AgentStatsController>();
             _inactiveAgents = _agents.ToList();
-
             _polyAgentCounts = new Dictionary<long, int>(ExplosionManager.PolyNum);
 
             Rand = new SeedRandom(gameObject);
 
-            if ( _handle == null )
+            if (_handle == null)
                 _handle = FindFirstObjectByType<DRcHandle>();
 
-            if ( Explosion == null )
+            if (Explosion == null)
                 Explosion = FindFirstObjectByType<ExplosionManager>();
 
             RegularFilter = new DtQueryRegularFilter(Explosion);
@@ -77,13 +86,17 @@ namespace Scripts.Pathfinding
             _crowd = new DtCrowd(
                 new DtCrowdConfig(radius),
                 _handle.NavMeshData,
-                i => {
-                    if (i == 0) return RegularFilter;
-                    if (i == 1) return PanicFilter;
-                    return new DtQueryDefaultFilter();
-                }
+                i => i == 0 ? RegularFilter : i == 1 ? PanicFilter : new DtQueryDefaultFilter()
             );
 
+            InitializeAgentParams();
+        }
+
+        /// <summary>
+        /// Initializes agent movement parameters for normal, panic, and paralyzed states.
+        /// </summary>
+        private void InitializeAgentParams()
+        {
             _normalParams = new DtCrowdAgentParams
             {
                 radius = radius,
@@ -104,12 +117,10 @@ namespace Scripts.Pathfinding
 
             _panicParams = new DtCrowdAgentParams
             {
-                radius = _normalParams.radius,
-                height = _normalParams.height,
-                maxAcceleration = _normalParams.maxAcceleration,
-                obstacleAvoidanceType = _normalParams.obstacleAvoidanceType,
-
-
+                radius = radius,
+                height = height,
+                maxAcceleration = maxAcceleration,
+                obstacleAvoidanceType = 0,
                 maxSpeed = maxPanicSpeed,
                 separationWeight = separationPanicWeight,
                 collisionQueryRange = collisionPanicQueryRange,
@@ -120,12 +131,10 @@ namespace Scripts.Pathfinding
 
             _paralyzedParams = new DtCrowdAgentParams
             {
-                radius = _normalParams.radius,
-                height = _normalParams.height,
+                radius = radius,
+                height = height,
                 maxAcceleration = 0,
-                obstacleAvoidanceType = _normalParams.obstacleAvoidanceType,
-
-
+                obstacleAvoidanceType = 0,
                 maxSpeed = 0,
                 separationWeight = separationPanicWeight,
                 collisionQueryRange = collisionPanicQueryRange,
@@ -134,6 +143,7 @@ namespace Scripts.Pathfinding
                 queryFilterType = 1
             };
         }
+
 
         public static class DRCrowdUpdateFlags
         {
@@ -144,9 +154,15 @@ namespace Scripts.Pathfinding
             public const int DT_CROWD_OPTIMIZE_TOPO = 1 << 4;
         }
 
+        /// <summary>
+        /// Empty StartOrdered. Not used here.
+        /// </summary>
         internal protected override void StartOrdered() {}
 
-        private int _updateCursor = 0;
+        /// <summary>
+        /// Updates active agents in batches and spawns new ones if possible.
+        /// Also updates the underlying DtCrowd.
+        /// </summary>
         internal protected override void UpdateOrdered()
         {
             Profiler.BeginSample("DRC DRCrowdManager");
@@ -161,11 +177,10 @@ namespace Scripts.Pathfinding
                 _updateCursor++;
             }
 
-            if ( Exit.AnyExitUnoccupied() )
+            if (Exit.AnyExitUnoccupied())
             {
                 AgentStatsController agent = _inactiveAgents.FirstOrDefault();
-
-                if ( agent != null )
+                if (agent != null)
                 {
                     agent.gameObject.SetActive(true);
                     agent.Activate();
@@ -175,51 +190,80 @@ namespace Scripts.Pathfinding
             }
 
             _crowd.Update(Time.deltaTime, null);
+
+            Profiler.EndSample();
         }
 
+        /// <summary>
+        /// Instantiates a new agent at a given position with a specified state (normal or panicked).
+        /// </summary>
         public DtCrowdAgent AddAgent(Vector3 position, bool isPanicked)
         {
             RcVec3f rcVec = DRcHandle.ToDotVec3(position);
             return _crowd.AddAgent(rcVec, isPanicked ? _panicParams : _normalParams);
         }
+
+        /// <summary>
+        /// Removes an agent from the crowd simulation.
+        /// </summary>
         public void RemoveAgent(DtCrowdAgent agentId)
         {
             _crowd.RemoveAgent(agentId);
         }
 
+        /// <summary>
+        /// Sets a new movement target for an agent.
+        /// </summary>
         public void SetTarget(DtCrowdAgent agentId, long targetRef, RcVec3f targetPos)
         {   
             _crowd.RequestMoveTarget(agentId, targetRef, targetPos);
         }
 
+        /// <summary>
+        /// Snaps a position onto the navmesh.
+        /// </summary>
         public Vector3 SnapToNavMesh(RcVec3f position)
         {
             DRcHandle.FindNearest(position, out _, out var nearest, out _);
-
             return  DRcHandle.ToUnityVec3(nearest);
         }
 
-        private static Dictionary<long, int> _polyAgentCounts;
+        /// <summary>
+        /// Recalculates agent counts per navmesh polygon for checking overcrowding.
+        /// </summary>
         private void SetAgentCount()
         {
             Profiler.BeginSample("Crowd GOOD SPOT");
+
             _polyAgentCounts.Clear();
 
             foreach (DtCrowdAgent agent in _crowd.GetActiveAgents())
             {
                 long polyRef = agent.corridor.GetFirstPoly();
-
-                if (polyRef == 0)
-                    continue;
+                if (polyRef == 0) continue;
 
                 if (_polyAgentCounts.TryGetValue(polyRef, out int count))
                     _polyAgentCounts[polyRef] = count + 1;
                 else
                     _polyAgentCounts[polyRef] = 1;
             }
+
             Profiler.EndSample();
         }
 
+        /// <summary>
+        /// Returns the current number of agents at a given polygon reference.
+        /// </summary>
+        public static int AgentCountAt(long polyRef)
+        {
+            if (_polyAgentCounts.TryGetValue(polyRef, out int count))
+                return count;
+            return 0;
+        }
+
+        /// <summary>
+        /// Simulates an explosion event and triggers panic/paralyze states in agents.
+        /// </summary>
         public void ExplosionAt(RcVec3f center, float deathRadius, float fearRadius, float panicRadius)
         {
             float deathRadiusSq = deathRadius * deathRadius;
@@ -234,37 +278,10 @@ namespace Scripts.Pathfinding
 
                 if (distSq <= deathRadiusSq)
                     agent.ExplosionRadius = 1;
-                
                 else if (distSq <= fearRadiusSq)
-                {
                     Paralyze(agent);
-                }
                 else if (distSq <= panicRadiusSq)
-                {
                     Panic(agent);
-                }
-            }
-        }
-        
-        public void CheckForPanic(AgentStatsController agent, float checkRadius)
-        {
-            float deathRadiusSq = checkRadius * checkRadius;
-            float x = agent.ID.npos.X;
-            float z = agent.ID.npos.Z;
-
-            foreach (AgentStatsController a in _activeAgents)
-            {
-                if ( a.ExplosionRadius != 1 ) return;
-
-                float distSq =
-                    ( x - a.ID.npos.X) * ( x - a.ID.npos.X) +
-                    ( z - a.ID.npos.Z) * ( z - a.ID.npos.Z);
-
-                if (distSq <= deathRadiusSq)
-                {
-                    Panic(agent);
-                    return;
-                }
             }
         }
 
@@ -283,7 +300,7 @@ namespace Scripts.Pathfinding
         /// Call after finished with paralyze, fire, or explosion range
         /// </summary>
         /// <param name="agent"></param>
-        public void Panic(AgentStatsController agent)
+        public void Panic(AgentStatsController agent) // TODO
         {
             // warn all in range agents to panic
             agent.ExplosionRadius = 2;
@@ -302,40 +319,48 @@ namespace Scripts.Pathfinding
         }
 
         /// <summary>
-        /// To be used by agents
+        /// Checks if fire or explosion exists near a given polygon.
         /// </summary>
-        /// <param name="position"></param>
-        /// <param name="radius"></param>
-        /// <param name="fireSource"></param>
-        /// <returns></returns>
-        public bool LookForFire(RcVec3f position, float radius, out RcVec3f fireSource)
+        public bool CheckForPanic((RcVec3f, long) poly, float checkRadius)
         {
-            fireSource = RcVec3f.Zero;
+            if (LookForFire(poly, checkRadius))
+                return true;
 
-            DtStatus status = DRcHandle.FindNearest(position, out long startRef, out RcVec3f nearest, out _);
-            if ( status.Failed() )
-                return false;
+            float deathRadiusSq = checkRadius * checkRadius;
+            float x = poly.Item1.X;
+            float z = poly.Item1.Z;
 
-            List<long> resultRefs = _handle.PolysInCircle(startRef, nearest, radius);
+            foreach (AgentStatsController agent in _activeAgents)
+            {
+                if (agent.ExplosionRadius != 1) continue;
 
-            foreach ( long polyRef in resultRefs )
-                if ( Explosion.PolyHasFire(polyRef) )
-                {
-                    fireSource = _handle.NavMeshData.GetPolyCenter(polyRef);
+                float distSq = (x - agent.ID.npos.X) * (x - agent.ID.npos.X) + (z - agent.ID.npos.Z) * (z - agent.ID.npos.Z);
+
+                if (distSq <= deathRadiusSq)
                     return true;
-                }
+            }
 
             return false;
         }
 
-        public static int AgentCountAt(long polyRef)
+        /// <summary>
+        /// Checks if any polygon within a radius has fire.
+        /// </summary>
+        public bool LookForFire((RcVec3f, long) poly, float radius)
         {
-            if (_polyAgentCounts.TryGetValue(polyRef, out int count))
-                return count;
-            return 0;
+            List<long> resultRefs = _handle.PolysInCircle(poly.Item2, poly.Item1, radius);
+
+            foreach (long polyRef in resultRefs)
+                if (Explosion.PolyHasFire(polyRef))
+                    return true;
+
+            return false;
         }
 
         #if UNITY_EDITOR
+        /// <summary>
+        /// Editor-only agent baking method. Creates all agent objects from prefab.
+        /// </summary>
         internal protected override void Bake()
         {
             _agents = new AgentStatsController[_maxAgents];
