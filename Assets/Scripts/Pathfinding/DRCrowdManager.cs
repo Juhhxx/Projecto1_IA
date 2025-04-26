@@ -269,18 +269,6 @@ namespace Scripts.Pathfinding
         }
 
         /// <summary>
-        /// Call after finished with paralyze, fire, or explosion range
-        /// </summary>
-        /// <param name="agent"></param>
-        public void Panic(AgentStatsController agent)
-        {
-            // warn all in range agents to panic
-            agent.ExplosionRadius = 1;
-
-            _crowd.UpdateAgentParameters(agent.ID, _panicParams);
-        }
-
-        /// <summary>
         /// warn given agent to paralyze and set their movement to paralyze params
         /// </summary>
         /// <param name="agent"></param>
@@ -290,6 +278,19 @@ namespace Scripts.Pathfinding
 
             _crowd.UpdateAgentParameters(agent.ID, _paralyzedParams);
         }
+
+        /// <summary>
+        /// Call after finished with paralyze, fire, or explosion range
+        /// </summary>
+        /// <param name="agent"></param>
+        public void Panic(AgentStatsController agent)
+        {
+            // warn all in range agents to panic
+            agent.ExplosionRadius = 2;
+
+            _crowd.UpdateAgentParameters(agent.ID, _panicParams);
+        }
+
 
         /// <summary>
         /// Only called on object pool activation, as long as agents dont exit panic paralyze and death states

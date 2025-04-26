@@ -100,7 +100,7 @@ namespace Scripts
             {
                 _lastPolyRef = currPolyRef;
                 if ( _crowd.Explosion.PolyHasFire(_lastPolyRef) )
-                    Deactivate();
+                    ExplosionRadius = 3;
             }
         }
         public void UpdateOrdered()
@@ -115,7 +115,7 @@ namespace Scripts
             }
         }
 
-        private void Deactivate()
+        public void Deactivate()
         {
             _crowd.RemoveAgent(_agentID);
             _agentID = null;

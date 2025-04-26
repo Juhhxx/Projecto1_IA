@@ -95,7 +95,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5078459277463046394}
-  - component: {fileID: 810518433666018493}
   - component: {fileID: 3853728234938254601}
   - component: {fileID: 2450238958466189514}
   m_Layer: 0
@@ -121,22 +120,6 @@ Transform:
   - {fileID: 5090027718083395856}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &810518433666018493
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8260415460449031451}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d9d8465fca0b6d14ea4c38ab86a65d0d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _crowd: {fileID: 0}
-  <AgentState>k__BackingField: {fileID: 2450238958466189514}
-  _acceptedDistToGoal: 6
-  _stage: {fileID: 0}
 --- !u!114 &3853728234938254601
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -171,3 +154,5 @@ MonoBehaviour:
   _tiredColor: {r: 0.18579161, g: 0.4379744, b: 0.76729554, a: 0}
   _depleationSpeed: 0.5
   _agentStat: 0
+  _acceptedDist: 2
+  _crowd: {fileID: 0}
