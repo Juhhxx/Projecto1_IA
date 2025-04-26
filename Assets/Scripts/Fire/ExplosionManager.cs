@@ -15,9 +15,12 @@ namespace Scripts.Fire
     public class ExplosionManager : Manager
     {
         [SerializeField] private DRcHandle _handle;
+        [SerializeField] private DRCrowdManager _crowd;
         [SerializeField] private GameObject _firePrefab;
         [SerializeField] private GameObject _explosionObject;
-        [SerializeField] private float _radius = 20f, _radiusDeviation = 3f, _fireChance = 0.5f;
+        [SerializeField] private float _deathRadius = 20f, _fearRadius = 30f, _panicRadius = 40f;
+        [SerializeField] private Vector2 _radiusDeviation = Vector2.one;
+        [SerializeField] private float _fireChance = 0.5f;
         [SerializeField] private int _FirePerUpdateBatch = 2;
         [SerializeField] private int _runEveryframe = 2;
         [SerializeField] private float _explosionChancePerFrame = 0.001f;
@@ -39,8 +42,10 @@ namespace Scripts.Fire
 
             PolyNum = _firePolyList.Count;
 
-            if ( _handle == null )
+            if (  _handle == null )
                 _handle = FindFirstObjectByType<DRcHandle>();
+            if ( _crowd == null )
+                _crowd = FindFirstObjectByType<DRCrowdManager>();
 
             Rand = new RcSeedRandom(gameObject);
 
@@ -164,12 +169,16 @@ namespace Scripts.Fire
             {
                 DRcHandle.NavQuery.FindRandomPoint(DRcHandle.Filter, Rand as IRcRand, out long polyRef, out RcVec3f centerPos);
 
-                Debug.Log("Exploding " + polyRef + "!");
+                float deviation = Rand.Range(_radiusDeviation.x, _radiusDeviation.y);
+                float death = _deathRadius * deviation;
 
-                float radius = _radius + Rand.Range(-_radiusDeviation, _radiusDeviation);;
-                List<long> resultRefs = PolysInCircle( polyRef, centerPos, radius);
+                List<long> resultRefs = _handle.PolysInCircle( polyRef, centerPos, death);
+
                 LatestExplosion = centerPos;
-                StartCoroutine(ExplodeAt(_firePolys[polyRef].transform.position, radius));
+
+                _crowd.ExplosionAt(centerPos, death, _fearRadius * deviation, _panicRadius * deviation);
+
+                StartCoroutine(ExplodeAt(_firePolys[polyRef].transform.position, death));
 
                 foreach ( long fireRef in resultRefs )
                 {
@@ -214,55 +223,6 @@ namespace Scripts.Fire
             }
 
             _explosionObject.SetActive(false);
-        }
-
-        /// <summary>
-        /// To be used by agents
-        /// </summary>
-        /// <param name="position"></param>
-        /// <param name="radius"></param>
-        /// <param name="fireSource"></param>
-        /// <returns></returns>
-        public bool LookForFire(RcVec3f position, float radius, out RcVec3f fireSource)
-        {
-            fireSource = RcVec3f.Zero;
-
-            DtStatus status = DRcHandle.FindNearest(position, out long startRef, out RcVec3f nearest, out _);
-            if ( status.Failed() )
-                return false;
-
-            List<long> resultRefs = PolysInCircle(startRef, nearest, radius);
-
-            foreach ( long polyRef in resultRefs )
-                if ( PolyHasFire(polyRef) )
-                {
-                    fireSource = _handle.NavMeshData.GetPolyCenter(polyRef);
-                    return true;
-                }
-
-            return false;
-        }
-
-        private List<long> PolysInCircle(long startRef, RcVec3f nearest, float radius)
-        {
-            List<long> resultRefs = new List<long>();
-            List<long> resultParents = new List<long>();
-            List<float> resultCosts = new List<float>();
-
-            DtStatus status = DRcHandle.NavQuery.FindPolysAroundCircle (
-                startRef,
-                nearest,
-                radius,
-                DRcHandle.Filter,
-                ref resultRefs,
-                ref resultParents,
-                ref resultCosts
-            );
-
-            if ( status.Failed() )
-                return null;
-
-            return resultRefs;
         }
 
         /// <summary>
