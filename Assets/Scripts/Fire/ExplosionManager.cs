@@ -22,15 +22,20 @@ namespace Scripts.Fire
         [SerializeField] private int _runEveryframe = 2;
         [SerializeField] private float _explosionChancePerFrame = 0.001f;
 
-        private static Dictionary<long, GameObject> _firePolys = new();
+        private static Dictionary<long, Fire> _firePolys = new();
         [SerializeField] private List<Fire> _firePolyList = new();
+        private IList<Fire> _activeFires;
+        private IList<Fire> _inactiveFires;
         public RcVec3f LatestExplosion { get; private set; }
 
         
-        public static ISeedRandom Rand { get; private set; }
+        public ISeedRandom Rand { get; private set; }
 
         internal protected override void AwakeOrdered()
         {
+            _activeFires = new List<Fire>();
+            _inactiveFires = _firePolyList.ToList();
+
             if ( _handle == null )
                 _handle = FindFirstObjectByType<DRcHandle>();
 
@@ -39,7 +44,7 @@ namespace Scripts.Fire
             Debug.Log("Poly list count: " + _firePolyList.Count);
             foreach (Fire fire in _firePolyList)
             {
-                _firePolys[fire.PolyRef] = fire.gameObject;
+                _firePolys[fire.PolyRef] = fire;
                 // Debug.Log( "new fire go: " + _firePolys[fire.PolyRef] );
             }
             Debug.Log("Poly dict count: " + _firePolys.Count);
@@ -50,7 +55,7 @@ namespace Scripts.Fire
         #if UNITY_EDITOR
         internal protected override void Bake()
         {
-            _firePolys = new Dictionary<long, GameObject>();
+            _firePolys = new Dictionary<long, Fire>();
             _firePolyList = new List<Fire>();
 
             /*Undo.IncrementCurrentGroup();
@@ -120,11 +125,11 @@ namespace Scripts.Fire
                 }
             }
 
-            fire.SetRefs(polyRef, neighborRefs.ToArray());
+            fire.SetRefs( this, polyRef, neighborRefs.ToArray() );
             
             // Debug.Log("polyref: " + fire.PolyRef);
 
-            _firePolys[polyRef] = newFire;
+            _firePolys[polyRef] = fire;
             _firePolyList.Add(fire);
 
             foreach (long p in neighborRefs)
@@ -143,6 +148,7 @@ namespace Scripts.Fire
         }
         #endif
 
+        private int _updateCursor = 0;
         internal protected override void UpdateOrdered()
         {
             if (Time.frameCount % _runEveryframe != 0) // run every 2 frames
@@ -170,13 +176,18 @@ namespace Scripts.Fire
                 }
             }
 
-            int offset = Mathf.Min(_FirePerUpdateBatch, _firePolyList.Count);
-
-            _firePolyList.Sort((a, b) => a.ON == b.ON ? 0 : (a.ON ? -1 : 1));
+            int offset = Mathf.Min(_FirePerUpdateBatch, _activeFires.Count);
 
             for (int i = 0; i < offset; i++)
-                if ( _firePolyList[i].ON )
-                    _firePolyList[i].UpdateOrdered();
+                _activeFires[i].UpdateOrdered();
+
+            int count = _activeFires.Count;
+
+            for (int i = 0; i < _FirePerUpdateBatch && count > 0; i++)
+            {
+                _activeFires[_updateCursor % count].UpdateOrdered();
+                _updateCursor++;
+            }
         }
 
         private IEnumerator ExplodeAt(Vector3 pos, float radius)
@@ -260,7 +271,7 @@ namespace Scripts.Fire
         {
             if ( _firePolys.TryGetValue(polyRef, out var fire) && fire != null )
             {
-                if ( fire.activeSelf )
+                if ( _activeFires.Contains(fire) )
                     return true;
                 return false;
             }
@@ -269,18 +280,31 @@ namespace Scripts.Fire
             return false;
         }
 
-        public static bool SetFire(long polyRef)
+        public bool SetFire(long polyRef)
         {
             if ( _firePolys.TryGetValue(polyRef, out var fire) && fire != null )
             {
-                if ( fire.activeSelf )
+                if ( _activeFires.Contains(fire) )
                     return false;
                 
-                fire.SetActive(true);
+                _inactiveFires.Remove(fire);
+                _activeFires.Add(fire);
+                fire.gameObject.SetActive(true);
                 return true;
             }
             
             Debug.LogWarning("Fire not already baked, polyRef: " + polyRef + " _firePolys count: " + _firePolys.Count);
+            return false;
+        }
+
+        public bool UnSetFire(Fire fire)
+        {
+            if ( _inactiveFires.Contains(fire) )
+                return false;
+                _inactiveFires.Add(fire);
+                _activeFires.Remove(fire);
+            
+            Debug.LogWarning("Fire already extinguished: " + " " + _firePolys.Count);
             return false;
         }
     }

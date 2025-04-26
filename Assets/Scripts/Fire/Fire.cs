@@ -7,22 +7,22 @@ namespace Scripts.Fire
     {
         [SerializeField] private float _duration;
 
+
+        [SerializeField] private ExplosionManager _explosion;
         [field:SerializeField] public long PolyRef { get; private set; }
         [field:SerializeField] public long[] NeiRefs { get; private set; }
         [SerializeField] private float _firePropagation = 0.005f;
 
         private float _lifeTime;
-        public bool ON { get; private set; } = false;
 
         private void OnEnable()
         {
             _lifeTime = 0f;
-            ON = true;
         }
 
         private void OnDisable()
         {
-            ON = false;
+            _explosion.UnSetFire(this);
         }
 
         public void UpdateOrdered()
@@ -33,13 +33,14 @@ namespace Scripts.Fire
             if ( _lifeTime >= _duration )
                 gameObject.SetActive(false);
 
-            if ( ExplosionManager.Rand.Range(0f, 1f) < _firePropagation )
-                ExplosionManager.SetFire( NeiRefs[ ExplosionManager.Rand.Range(0, NeiRefs.Length) ] );
+            if ( _explosion.Rand.Range(0f, 1f) < _firePropagation )
+                _explosion.SetFire( NeiRefs[ _explosion.Rand.Range(0, NeiRefs.Length) ] );
         }
 
         #if UNITY_EDITOR
-        public void SetRefs(long selfRef, long[] neiRefs)
+        public void SetRefs(ExplosionManager explosion, long selfRef, long[] neiRefs)
         {
+            _explosion = explosion;
            PolyRef = selfRef;
            NeiRefs = neiRefs;
         }

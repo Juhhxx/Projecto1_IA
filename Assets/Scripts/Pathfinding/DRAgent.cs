@@ -17,15 +17,11 @@ namespace Scripts.Pathfinding
         private (RcVec3f, long)  _curSpot;
         private (RcVec3f, long) _nextSpot;
 
-        public bool IsActive { get; private set; }
-
         public void Activate()
         {
             _exit = Exit.GetRandomGoodExit( _crowdManager.Rand.Range(0, 32), out (RcVec3f, long) pos);
             _exit.StayInSpot(pos.Item2);
             _lastSpot = pos;
-
-            IsActive = true;
 
             transform.position = _crowdManager.SnapToNavMesh(pos.Item1);;
             
@@ -42,7 +38,6 @@ namespace Scripts.Pathfinding
             _crowdManager.RemoveAgent(_agentID);
             _agentID = null;
             
-            IsActive = false;
             gameObject.SetActive(false);
         }
 
@@ -70,10 +65,7 @@ namespace Scripts.Pathfinding
                     _stage = null;
                 }
             }
-        }
 
-        private void Update()
-        {
             if ( _agentID != null )
             {
                 transform.position = DRcHandle.ToUnityVec3(_agentID.npos);
@@ -91,6 +83,11 @@ namespace Scripts.Pathfinding
                 _exit.LeaveSpot( _lastSpot.Item2 );
                 _exit = null;
             }
+        }
+
+        private void Update()
+        {
+
         }
 
 

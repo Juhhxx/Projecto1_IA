@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using DotRecast.Core.Numerics;
 using DotRecast.Detour;
@@ -22,6 +23,8 @@ namespace Scripts.Pathfinding
         // for object pooling
         [SerializeField] private GameObject _agentPrefab;
         [SerializeField] private DRAgent[] _agents;
+        private IList<DRAgent> _activeAgents;
+        private IList<DRAgent> _inactiveAgents;
         public float maxAgentRadius = 0.6f;
         [field:SerializeField] public Renderer BoundBox { get; private set; }
 
@@ -54,6 +57,9 @@ namespace Scripts.Pathfinding
 
         internal protected override void AwakeOrdered()
         {
+            _activeAgents = new List<DRAgent>();
+            _inactiveAgents = _agents.ToList();
+
             Rand = new SeedRandom(gameObject);
 
             if ( _handle == null )
@@ -120,27 +126,33 @@ namespace Scripts.Pathfinding
 
         internal protected override void StartOrdered() {}
 
+        private int _updateCursor = 0;
         internal protected override void UpdateOrdered()
         {
             Profiler.BeginSample("DRC DRCrowdManager");
 
-            _crowd.Update(Time.deltaTime, null);
-
-            int offset = Time.frameCount % _AgentsPerUpdateBatch;
-
-            for (int i = offset; i < _agents.Length; i += _AgentsPerUpdateBatch)
-                _agents[i].UpdateOrdered();
-
-
-            if ( ! Exit.AnyExitUnoccupied() ) return;
-
-            DRAgent agent = _agents.FirstOrDefault(t => !t.IsActive);
-
-            if ( agent != null )
+            if ( Exit.AnyExitUnoccupied() )
             {
-                agent.gameObject.SetActive(true);
-                agent.Activate();
+                DRAgent agent = _inactiveAgents.FirstOrDefault();
+
+                if ( agent != null )
+                {
+                    agent.gameObject.SetActive(true);
+                    agent.Activate();
+                    _inactiveAgents.RemoveAt(0);
+                    _activeAgents.Add(agent);
+                }
             }
+
+            int count = _activeAgents.Count;
+
+            for (int i = 0; i < _AgentsPerUpdateBatch && count > 0; i++)
+            {
+                _activeAgents[_updateCursor % count].UpdateOrdered();
+                _updateCursor++;
+            }
+
+            _crowd.Update(Time.deltaTime, null);
         }
 
         public DtCrowdAgent AddAgent(Vector3 position, bool isPanicked)
