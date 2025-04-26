@@ -10,9 +10,12 @@ namespace Scripts.AI.FSMs.UnityIntegration
 
         private void Start()
         {
+            // Get copy of the State Machine.
             _stateMachine = _stateMachineModel.CreateStateMachine();
             
+            // Set the Object Reference of the State Machine to this Game Object.
             _stateMachine.SetObjectReference(gameObject);
+            // Instantiate the State Machine.
             _stateMachine.InstantiateStateMachine();
         }
         private void Update()
