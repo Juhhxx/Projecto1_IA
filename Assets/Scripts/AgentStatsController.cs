@@ -60,7 +60,11 @@ namespace Scripts
             _random         = new SeedRandom(gameObject);
             _wfsChange      = new WaitForSeconds(_depleationSpeed);
             _wfsUpdate      = new WaitForSeconds(1f);
-            
+        }
+
+        private void OnEnbale()
+        {
+            ChooseRandomState();
         }
 
         public void ChooseRandomState()
