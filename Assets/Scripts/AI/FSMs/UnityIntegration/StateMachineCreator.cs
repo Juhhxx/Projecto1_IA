@@ -12,7 +12,7 @@ namespace Scripts.AI.FSMs.UnityIntegration
     public class StateMachineCreator : ScriptableObject
     {
         // Reference to the State Machine that is created.
-        private StateMachine _stateMachine;
+        private StateMachine _stateMachine = null;
         // Reference to the Game Object that the State Machine affects.
         private GameObject _objectReference;
         // Reference to the Initial State of the State Machine.
@@ -25,12 +25,15 @@ namespace Scripts.AI.FSMs.UnityIntegration
         /// </summary>
         private void InstantiateStates()
         {
+            InitialState.SetObjectReference(_objectReference);
+            InitialState.InstantiateState();
             // Instantiate all States.
             foreach (StateTransition st in StateTransitions)
             {
-                Debug.Log($"Initializing State {st.State.name}");
+                Debug.Log($"Initializing State {st.State.name} {st.State.State == null}");
                 st.State.SetObjectReference(_objectReference);
                 st.State.InstantiateState();
+                Debug.Log($"Initialized State {st.State.name} {st.State.State == null}");
             }
             // Instantiate all Transitions and add them to their respective States.
             foreach (StateTransition st in StateTransitions)
@@ -58,6 +61,7 @@ namespace Scripts.AI.FSMs.UnityIntegration
         public void InstantiateStateMachine()
         {
             InstantiateStates();
+            Debug.Log($"Instantiating State Machine : {InitialState.State == null}");
             _stateMachine = new StateMachine(InitialState.State);
         }
         /// <summary>

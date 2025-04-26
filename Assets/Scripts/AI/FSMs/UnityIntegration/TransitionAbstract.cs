@@ -12,7 +12,7 @@ namespace Scripts.AI.FSMs.UnityIntegration
         // Name for the Transition that is created.
         public string Name;
         // Reference for the Transition that is created.
-        protected Transition transition;
+        protected Transition transition = null;
         public Transition Transition => transition;
         // Reference to the State this Transition goes to.
         public StateAbstract ToState;

@@ -12,7 +12,7 @@ namespace Scripts.AI.FSMs.UnityIntegration
         // Name for the State that is created.
         public string Name;
         // Reference to the State that is created.
-        protected State state;
+        protected State state = null;
         public State State => state;
         // Refence to the Game Object whom this State affects.
         protected GameObject objectReference;

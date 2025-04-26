@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using UnityEngine;
 
 namespace Scripts.AI.FSMs.BaseFiles
 {
@@ -26,6 +27,7 @@ namespace Scripts.AI.FSMs.BaseFiles
             Action actions = null;
             Transition triggeredTransition = null;
 
+            Debug.Log($"Is List Transitions null ? {_currentState == null}");
             // Check if any Transition is triggered, if yes set triggeredTransition to it.
             if (_currentState.Transitions.Count() > 0)
             {
