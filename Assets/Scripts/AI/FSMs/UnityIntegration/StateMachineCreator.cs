@@ -5,61 +5,96 @@ using Scripts.AI.FSMs.BaseFiles;
 
 namespace Scripts.AI.FSMs.UnityIntegration
 {
+    /// <summary>
+    /// Scriptable Object that creates State Machines that can be edited through the Inspector.
+    /// </summary>
     [CreateAssetMenu(fileName = "StateMachine", menuName = "State Machines/StateMachine")]
     public class StateMachineCreator : ScriptableObject
     {
+        // Reference to the State Machine that is created.
         private StateMachine _stateMachine;
+        // Reference to the Game Object that the State Machine affects.
         private GameObject _objectReference;
+        // Reference to the Initial State of the State Machine.
         public StateAbstract InitialState;
+        // List of references to State Transitions.
         public List<StateTransition> StateTransitions;
         
+        /// <summary>
+        /// Method that instantiates all States and Transitions from the State Machine.
+        /// </summary>
         private void InstantiateStates()
         {
+            // Instantiate all States.
             foreach (StateTransition st in StateTransitions)
             {
                 Debug.Log($"Initializing State {st.State.name}");
                 st.State.SetObjectReference(_objectReference);
                 st.State.InstantiateState();
             }
+            // Instantiate all Transitions and add them to their respective States.
             foreach (StateTransition st in StateTransitions)
             {
                 foreach (TransitionAbstract t in st.Transitions)
                 {
                     t.SetObjectReference(_objectReference);
-                    if (t.Transition == null) t.IntantiateTransition();
+                    if (t.Transition == null) t.InstantiateTransition();
                     st.State.AddTransitions(t);
                 }
             }
         }
 
+        /// <summary>
+        /// Method for defining what Game Object the State Machine will affect.
+        /// </summary>
+        /// <param name="go">The Game Object that will be affected.</param>
         public void SetObjectReference(GameObject go)
         {
             _objectReference = go;
         }
+        /// <summary>
+        /// method for instantiating the State Machine.
+        /// </summary>
         public void InstantiateStateMachine()
         {
             InstantiateStates();
             _stateMachine = new StateMachine(InitialState.State);
         }
+        /// <summary>
+        /// method for running the State Machine.
+        /// </summary>
         public void Run()
         {
             _stateMachine.Update()?.Invoke();
         }
+        /// <summary>
+        /// Method for creating a copy of the State Machine.
+        /// </summary>
+        /// <returns>A copy of the State Machine.</returns>
         public StateMachineCreator CreateStateMachine()
         {
+            // Dictionary for storing the references to all objects that have been instantiated.
             Dictionary<string,ScriptableObject> instances = new Dictionary<string,ScriptableObject>();
+
+            // New State Machine Asset.
             StateMachineCreator newSM = Instantiate(this);
 
+            // Create a copy of the Initial State and store it in the instances Dictionary.
             newSM.InitialState = InitialState.CreateState();
             instances.Add(newSM.InitialState.name,newSM.InitialState);
 
+            // Create a new List of StateTransitions.
             newSM.StateTransitions = new List<StateTransition>();
 
+            // Setup the new List.
             foreach (StateTransition st in StateTransitions)
             {
+                // Create new State and List of Transitions.
                 StateAbstract state;
                 List<TransitionAbstract> transitions = new List<TransitionAbstract>();
 
+                // If the State has already been copied, use the reference stored in instances,
+                // if not, create a copy of the requested State and store is in instances Dict.
                 if (instances.ContainsKey(st.State.name))
                 {
                     state = instances[st.State.name] as StateAbstract;
@@ -70,8 +105,11 @@ namespace Scripts.AI.FSMs.UnityIntegration
                     instances.Add(st.State.name,state);
                 }
 
+                // Check all Transitions in the StateTransition
                 foreach (TransitionAbstract t in st.Transitions)
                 {
+                    // If the Transition has already been copied, use the reference stored in instances,
+                    // if not, create a copy of the requested Transition and store it in instances Dict.
                     if (instances.ContainsKey(t.name))
                     {
                         transitions.Add(instances[t.name] as TransitionAbstract);
@@ -80,6 +118,8 @@ namespace Scripts.AI.FSMs.UnityIntegration
                     {
                         TransitionAbstract transition = t.CreateTransition();
                         
+                        // If the Transition ToState has already been copied, use the reference stored in instances,
+                        // if not, create a copy of the requested State and store it in instances Dict.
                         if (instances.ContainsKey(t.ToState.name))
                         {
                             transition.ToState = instances[t.ToState.name] as StateAbstract;
@@ -94,6 +134,7 @@ namespace Scripts.AI.FSMs.UnityIntegration
                     }
                 }
 
+                // Create new StateTransition with the copied information amd Add it to the new List.
                 StateTransition newST = new StateTransition(state,transitions);
                 newSM.StateTransitions.Add(newST);
             }

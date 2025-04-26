@@ -3,14 +3,20 @@ using System.Collections.Generic;
 
 namespace Scripts.AI.FSMs.BaseFiles
 {
+    /// <summary>
+    /// Class that defines a State to be used in a State Machine.
+    /// </summary>
     public class State
     {
+        // Name of the State.
         public string Name {get; private set; }
 
+        // Actions to be executed in the beggining, during and end of this State.
         public Action EntryActions { get; private set; }
         public Action StateActions { get; private set; }
         public Action ExitActions { get; private set; }
 
+        // List of all Transitions that come from this State. 
         public IEnumerable<Transition> Transitions => _transitions;
         private IList<Transition> _transitions;
 
@@ -23,6 +29,10 @@ namespace Scripts.AI.FSMs.BaseFiles
             _transitions    = new List<Transition>();
         }
 
+        /// <summary>
+        /// Meyhod for adding a Trasition to the State.
+        /// </summary>
+        /// <param name="transition">Trasition to be added.</param>
         public void AddTransition(Transition transition)
         {
             _transitions.Add(transition);
