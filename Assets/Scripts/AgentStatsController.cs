@@ -97,6 +97,8 @@ namespace Scripts
         private long _lastPolyRef = 0;
         private void Update()
         {
+            if ( _agentID == null ) return;
+
             long currPolyRef = _agentID.corridor.GetFirstPoly();
 
             if (currPolyRef != _lastPolyRef)
@@ -232,7 +234,7 @@ namespace Scripts
         }
         public void UpdateStats()
         {
-            if (_updateStats == null) _updateStats = StartCoroutine(UpdateStatsCoroutine());
+            if (_updateStats == null && _random != null ) _updateStats = StartCoroutine(UpdateStatsCoroutine());
         }
         private IEnumerator UpdateStatsCoroutine()
         {
