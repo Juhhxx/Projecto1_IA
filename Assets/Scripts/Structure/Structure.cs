@@ -1,13 +1,16 @@
 using System.Collections.Generic;
 using DotRecast.Core.Numerics;
 using Scripts.Pathfinding;
+using Scripts.Random;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 public abstract class Structure<T> : MonoBehaviour where T : Structure<T>
 {
     [SerializeField] private float _radius = 10f;
     [SerializeField] private Transform _pivot;
     [SerializeField] private int _tooManyAgents = 5;
+    [SerializeField] private int _tries = 3;
 
     // one structure list per subclass
     protected static List<T> _structures = new List<T>();
@@ -16,6 +19,8 @@ public abstract class Structure<T> : MonoBehaviour where T : Structure<T>
 
     public RcVec3f Position { get; private set; }
     public long Ref { get; private set; }
+
+    protected ISeedRandom _rand;
 
     public static void AwakeOrdered()
     {
@@ -30,6 +35,7 @@ public abstract class Structure<T> : MonoBehaviour where T : Structure<T>
     }
     private void StartStructure()
     {
+        _rand = new SeedRandom(gameObject);
         _positions = new HashSet<Vector3>();
         _placeDict = new Dictionary<long, int>();
 
@@ -72,7 +78,6 @@ public abstract class Structure<T> : MonoBehaviour where T : Structure<T>
 
     public bool EnteredArea(RcVec3f pos)
     {
-        Debug.Log("Entered area? dis: " + RcVec3f.Distance(pos, Position) + " rad " + _radius);
         return RcVec3f.Distance(pos, Position) < _radius;
     }
 
@@ -81,10 +86,20 @@ public abstract class Structure<T> : MonoBehaviour where T : Structure<T>
     /// </summary>
     /// <param name="pos"></param>
     /// <returns></returns>
-    public (RcVec3f, long) GetBestSpot(RcVec3f pos, int random)
+    public (RcVec3f, long) GetBestSpot(RcVec3f pos)
     {
-        Debug.DrawLine(DRcHandle.ToUnityVec3(pos), DRcHandle.ToUnityVec3(_places[ random % _places.Length ].Item1));
-        return _places[ random % _places.Length ];
+        (RcVec3f, long) next = _places[ _rand.Triangular(0, _places.Length) ];
+
+        Debug.DrawLine(DRcHandle.ToUnityVec3(pos), DRcHandle.ToUnityVec3(_places[_rand.Triangular(0, _places.Length)].Item1));
+
+        for ( int i = 0; i < _tries ; i++ )
+        {
+            if ( IsGoodSpot(next.Item2) )
+                return next;
+            next = _places[ _rand.Triangular(0, _places.Length) ];
+        }
+        return next;
+
         /*int len = _places.Length/2;
         int start = random % len;
 
@@ -123,7 +138,8 @@ public abstract class Structure<T> : MonoBehaviour where T : Structure<T>
     /// <returns> If its a good spot </returns>
     public bool IsGoodSpot(long polyRef)
     {
-        return _placeDict.TryGetValue(polyRef, out int count) && count < _tooManyAgents;
+        if ( DRCrowdManager.AgentCountAt(polyRef) > 0 ) Debug.Log("Agent count at is " + DRCrowdManager.AgentCountAt(polyRef));
+        return  DRCrowdManager.AgentCountAt(polyRef) < _tooManyAgents; // _placeDict.TryGetValue(polyRef, out int count) && count < _tooManyAgents;
     }
 
 
@@ -136,7 +152,7 @@ public abstract class Structure<T> : MonoBehaviour where T : Structure<T>
 
         if ( _positions != null )
             foreach (Vector3 pos in _positions)
-                Gizmos.DrawSphere(pos, 1f);
+                Gizmos.DrawSphere(pos, 0.5f);
     }
     #endif
 

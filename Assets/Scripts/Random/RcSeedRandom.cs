@@ -46,5 +46,15 @@ namespace Scripts.Random
         {
             return $"{Owner?.name ?? "NoObject"} (ID: {ID})";
         }
+
+        public int Triangular(int minInclusive, int maxExclusive)
+        {
+            return (Range(minInclusive, maxExclusive) + Range(minInclusive, maxExclusive)) / 2;
+        }
+
+        public float Triangular(float minInclusive, float maxExclusive)
+        {
+            return (Range(minInclusive, maxExclusive) + Range(minInclusive, maxExclusive)) / 2;
+        }
     }
 }

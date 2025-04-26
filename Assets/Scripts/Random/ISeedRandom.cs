@@ -10,6 +10,8 @@ namespace Scripts.Random
 
         public int Range(int minInclusive, int maxExclusive);
         public float Range(float minInclusive, float maxExclusive);
+        public int Triangular(int minInclusive, int maxExclusive);
+        public float Triangular(float minInclusive, float maxExclusive);
 
         public abstract string ToString();
     }
