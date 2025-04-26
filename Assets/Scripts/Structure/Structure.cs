@@ -6,6 +6,7 @@ using UnityEngine;
 public abstract class Structure<T> : MonoBehaviour where T : Structure<T>
 {
     [SerializeField] private float _radius = 10f;
+    [SerializeField] private Transform _pivot;
     [SerializeField] private int _tooManyAgents = 5;
 
     // one structure list per subclass
@@ -32,7 +33,7 @@ public abstract class Structure<T> : MonoBehaviour where T : Structure<T>
         _positions = new HashSet<Vector3>();
         _placeDict = new Dictionary<long, int>();
 
-        DRcHandle.FindNearest(transform.position, out long nearestRef, out RcVec3f nearestPt, out _);
+        DRcHandle.FindNearest(_pivot.position, out long nearestRef, out RcVec3f nearestPt, out _);
         Ref = nearestRef;
         Position = nearestPt;
 
@@ -71,6 +72,7 @@ public abstract class Structure<T> : MonoBehaviour where T : Structure<T>
 
     public bool EnteredArea(RcVec3f pos)
     {
+        Debug.Log("Entered area? dis: " + RcVec3f.Distance(pos, Position) + " rad " + _radius);
         return RcVec3f.Distance(pos, Position) < _radius;
     }
 
@@ -81,7 +83,9 @@ public abstract class Structure<T> : MonoBehaviour where T : Structure<T>
     /// <returns></returns>
     public (RcVec3f, long) GetBestSpot(RcVec3f pos, int random)
     {
-        int len = _places.Length/2;
+        Debug.DrawLine(DRcHandle.ToUnityVec3(pos), DRcHandle.ToUnityVec3(_places[ random % _places.Length ].Item1));
+        return _places[ random % _places.Length ];
+        /*int len = _places.Length/2;
         int start = random % len;
 
         (RcVec3f, long) fallback = _places[0];
@@ -106,7 +110,7 @@ public abstract class Structure<T> : MonoBehaviour where T : Structure<T>
             }
         }
 
-        return fallback;
+        return fallback;*/
     }
 
     public void StayInSpot(long placeRef) => _placeDict[placeRef]++;
@@ -128,7 +132,7 @@ public abstract class Structure<T> : MonoBehaviour where T : Structure<T>
     #if UNITY_EDITOR
     private void OnDrawGizmosSelected()
     {
-        Gizmos.DrawWireSphere(transform.position, _radius);
+        Gizmos.DrawWireSphere(_pivot.position, _radius);
 
         if ( _positions != null )
             foreach (Vector3 pos in _positions)

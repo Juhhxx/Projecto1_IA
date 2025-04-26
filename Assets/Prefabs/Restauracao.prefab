@@ -60,6 +60,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _radius: 50.27
+  _pivot: {fileID: 9309984621557855}
   _tooManyAgents: 4
   _tables:
   - {fileID: 1625446213024432143}
