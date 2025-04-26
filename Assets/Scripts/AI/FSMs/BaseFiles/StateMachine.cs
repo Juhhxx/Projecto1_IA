@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 
 namespace Scripts.AI.FSMs.BaseFiles
 {
@@ -16,13 +17,16 @@ namespace Scripts.AI.FSMs.BaseFiles
             Action actions = null;
             Transition triggeredTransition = null;
 
-            foreach (Transition trans in _currentState.Transitions)
+            if (_currentState.Transitions.Count() > 0)
             {
-                if (trans.IsTriggered())
+                foreach (Transition trans in _currentState.Transitions)
                 {
-                    triggeredTransition = trans;
-                    break;
-                }
+                    if (trans.IsTriggered())
+                    {
+                        triggeredTransition = trans;
+                        break;
+                    }
+            }
             }
 
             if (triggeredTransition != null)
