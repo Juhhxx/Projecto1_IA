@@ -83,8 +83,6 @@ namespace Scripts
 
         public void Activate()
         {
-            ChooseRandomState();
-
             Exit.GetRandomGoodExit( _crowd.Rand.Range(0, 32), out (RcVec3f, long) pos);
             LastRef = pos;
 
@@ -92,6 +90,8 @@ namespace Scripts
             
             _agentID = _crowd.AddAgent(transform.position, false);
             _crowd.SwitchToNormal(_agentID);
+            
+            ChooseRandomState();
         }
 
         private long _lastPolyRef = 0;
