@@ -27,6 +27,7 @@ namespace Scripts.Fire
         private IList<Fire> _activeFires;
         private IList<Fire> _inactiveFires;
         public RcVec3f LatestExplosion { get; private set; }
+        public static int PolyNum { get; private set; }
 
         
         public ISeedRandom Rand { get; private set; }
@@ -35,6 +36,8 @@ namespace Scripts.Fire
         {
             _activeFires = new List<Fire>();
             _inactiveFires = _firePolyList.ToList();
+
+            PolyNum = _firePolyList.Count;
 
             if ( _handle == null )
                 _handle = FindFirstObjectByType<DRcHandle>();

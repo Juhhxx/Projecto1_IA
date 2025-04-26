@@ -132,4 +132,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _crowdManager: {fileID: 0}
-  _acceptedDistToGoal: 8
+  _acceptedDistToGoal: 6
+  _stage: {fileID: 0}

@@ -25,7 +25,6 @@ namespace Scripts.Pathfinding
         [SerializeField] private DRAgent[] _agents;
         private IList<DRAgent> _activeAgents;
         private IList<DRAgent> _inactiveAgents;
-        public float maxAgentRadius = 0.6f;
         [field:SerializeField] public Renderer BoundBox { get; private set; }
 
         public ISeedRandom Rand { get; private set; }
@@ -60,6 +59,8 @@ namespace Scripts.Pathfinding
             _activeAgents = new List<DRAgent>();
             _inactiveAgents = _agents.ToList();
 
+            _polyAgentCounts = new Dictionary<long, int>(ExplosionManager.PolyNum);
+
             Rand = new SeedRandom(gameObject);
 
             if ( _handle == null )
@@ -72,7 +73,7 @@ namespace Scripts.Pathfinding
             PanicFilter = new DtQueryPanicFilter(_explosionManager);
 
             _crowd = new DtCrowd(
-                new DtCrowdConfig(maxAgentRadius),
+                new DtCrowdConfig(radius),
                 _handle.NavMeshData,
                 i => {
                     if (i == 0) return RegularFilter;
@@ -131,6 +132,16 @@ namespace Scripts.Pathfinding
         {
             Profiler.BeginSample("DRC DRCrowdManager");
 
+            SetAgentCount();
+
+            int count = _activeAgents.Count;
+
+            for (int i = 0; i < _AgentsPerUpdateBatch && count > 0; i++)
+            {
+                _activeAgents[_updateCursor % count].UpdateOrdered();
+                _updateCursor++;
+            }
+
             if ( Exit.AnyExitUnoccupied() )
             {
                 DRAgent agent = _inactiveAgents.FirstOrDefault();
@@ -142,14 +153,6 @@ namespace Scripts.Pathfinding
                     _inactiveAgents.RemoveAt(0);
                     _activeAgents.Add(agent);
                 }
-            }
-
-            int count = _activeAgents.Count;
-
-            for (int i = 0; i < _AgentsPerUpdateBatch && count > 0; i++)
-            {
-                _activeAgents[_updateCursor % count].UpdateOrdered();
-                _updateCursor++;
             }
 
             _crowd.Update(Time.deltaTime, null);
@@ -185,6 +188,34 @@ namespace Scripts.Pathfinding
             DRcHandle.FindNearest(position, out _, out var nearest, out _);
 
             return  DRcHandle.ToUnityVec3(nearest);
+        }
+
+        private static Dictionary<long, int> _polyAgentCounts;
+        private void SetAgentCount()
+        {
+            Profiler.BeginSample("Crowd GOOD SPOT");
+            _polyAgentCounts.Clear();
+
+            foreach (DtCrowdAgent agent in _crowd.GetActiveAgents())
+            {
+                long polyRef = agent.corridor.GetFirstPoly();
+
+                if (polyRef == 0)
+                    continue;
+
+                if (_polyAgentCounts.TryGetValue(polyRef, out int count))
+                    _polyAgentCounts[polyRef] = count + 1;
+                else
+                    _polyAgentCounts[polyRef] = 1;
+            }
+            Profiler.EndSample();
+        }
+
+        public static int AgentCountAt(long polyRef)
+        {
+            if (_polyAgentCounts.TryGetValue(polyRef, out int count))
+                return count;
+            return 0;
         }
 
         #if UNITY_EDITOR

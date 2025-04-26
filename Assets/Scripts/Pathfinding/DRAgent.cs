@@ -41,47 +41,50 @@ namespace Scripts.Pathfinding
             gameObject.SetActive(false);
         }
 
-        public void UpdateOrdered()
+        public void UpdateOrdered() // garbage collector is having a hard time here
         {
             Profiler.BeginSample("DRC Agent");
 
-            if ( _exit == null && _stage != null && _stage.EnteredArea(_agentID.npos) )
+            if ( _exit != null && RcVec3f.Distance(_agentID.npos, _lastSpot.Item1) > _acceptedDistToGoal && _stage.EnteredArea(_agentID.npos) )
             {
-                // Debug.Log("Done Entered! New place: " + _nextSpot.Item1.X + " " + _nextSpot.Item1.Z);
+                _exit.LeaveSpot( _lastSpot.Item2 ); // only supposed to run one time
 
-                (RcVec3f, long) newplace = _stage.GetBestSpot(_agentID.npos, _crowdManager.Rand.Range(1, 10));
+                Debug.Log("Exited spot with distance " + RcVec3f.Distance(_agentID.npos, _lastSpot.Item1));
 
-                Debug.Log("Returning new " + newplace.Item2);
-
-                if ( newplace != _nextSpot )
+                if ( _stage.EnteredArea(_agentID.npos) )
                 {
-                    Debug.Log("Setting new target");
-                    _nextSpot = newplace;
+                    Debug.Log("Exited exit " + RcVec3f.Distance(_agentID.npos, _lastSpot.Item1));
+                    _nextSpot = _stage.GetBestSpot(_agentID.npos);
                     _crowdManager.SetTarget(_agentID, _nextSpot.Item2, _nextSpot.Item1);
-                }
-                else if ( RcVec3f.Distance(_agentID.npos, _nextSpot.Item1) < _acceptedDistToGoal )
-                {
-                    _stage.StayInSpot(_nextSpot.Item2);
-                    _stage = null;
+                    _exit = null;
                 }
             }
+            else if ( _stage != null )
+            {
+                Debug.Log("Done Entered! New place: " + _nextSpot.Item1.X + " " + _nextSpot.Item1.Z);
+
+                if ( _agentID.vel.Length() < 0.1f )
+                {
+                    if ( RcVec3f.Distance(_agentID.npos, _nextSpot.Item1) < _acceptedDistToGoal )
+                    {
+                        _stage.StayInSpot(_nextSpot.Item2);
+                        _stage = null;
+                        return;
+                    }
+
+                    _nextSpot = _stage.GetBestSpot(_agentID.npos);
+                    _crowdManager.SetTarget(_agentID, _nextSpot.Item2, _nextSpot.Item1);
+                }
+                
+            }
+
+            // use DtCrowdNeighbour to alarm other agents of panic
 
             if ( _agentID != null )
             {
                 transform.position = DRcHandle.ToUnityVec3(_agentID.npos);
                 if ( _agentID.vel.Length() > 0.1f )
                     transform.rotation = DRcHandle.ToDotQuat(_agentID.vel);
-                else
-                {
-                    // _crowdManager.SetTarget(_agentID, _nextSpot.Item2, _nextSpot.Item1);
-                }
-            }
-
-            if ( _exit != null && RcVec3f.Distance(_agentID.npos, _lastSpot.Item1) > _acceptedDistToGoal)
-            {
-                // Debug.Log("Exited spot with distance " + RcVec3f.Distance(_agentID.npos, _lastSpot.Item1));
-                _exit.LeaveSpot( _lastSpot.Item2 );
-                _exit = null;
             }
         }
 
