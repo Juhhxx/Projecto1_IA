@@ -1,5 +1,6 @@
 using DotRecast.Core.Numerics;
 using DotRecast.Detour.Crowd;
+using Scripts.Fire;
 using UnityEngine;
 using UnityEngine.Profiling;
 
@@ -8,6 +9,7 @@ namespace Scripts.Pathfinding
     public class DRAgent : MonoBehaviour
     {
         [SerializeField] private DRCrowdManager _crowdManager;
+        [SerializeField] private ExplosionManager _explosionManager;
         [field:SerializeField] public AgentStatsController AgentState { get; private set; }
         [SerializeField] private float _acceptedDistToGoal = 2f;
         private DtCrowdAgent _agentID;
@@ -31,8 +33,8 @@ namespace Scripts.Pathfinding
             _crowdManager.SwitchToNormal(_agentID);
 
             // testing purposes, remove later
-            _stage = Stage.FindNearest(_agentID.npos);
-            _crowdManager.SetTarget(_agentID, _stage.Ref, _stage.Position);
+            // _stage = Stage.FindNearest(_agentID.npos);
+            // _crowdManager.SetTarget(_agentID, _stage.Ref, _stage.Position);
 
             // Debug.Log("Set agent target as " + _stage + " in pos " + transform.position + " spawned at exit " + pos.Item1);
         }
@@ -92,9 +94,17 @@ namespace Scripts.Pathfinding
             }
         }
 
+        private long _lastPolyRef = 0;
         private void Update()
         {
+            long currPolyRef = _agentID.corridor.GetFirstPoly();
 
+            if (currPolyRef != _lastPolyRef)
+            {
+                _lastPolyRef = currPolyRef;
+                if ( _explosionManager.PolyHasFire(_lastPolyRef) )
+                    Deactivate();
+            }
         }
 
 
