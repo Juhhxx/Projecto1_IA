@@ -6,6 +6,7 @@ using DotRecast.Detour.Crowd;
 using Scripts.Fire;
 using Scripts.Pathfinding.DotRecast;
 using Scripts.Random;
+using Scripts.Structure;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Profiling;

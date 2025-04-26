@@ -1,5 +1,6 @@
 using DotRecast.Core.Numerics;
 using DotRecast.Detour.Crowd;
+using Scripts.Structure;
 using UnityEngine;
 using UnityEngine.Profiling;
 

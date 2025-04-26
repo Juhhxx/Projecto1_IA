@@ -4,41 +4,44 @@ using DotRecast.Core.Numerics;
 using Scripts.Pathfinding;
 using UnityEngine;
 
-public class GreenSpace : Structure<GreenSpace>
+namespace Scripts.Structure
 {
-    [field:SerializeField] private Renderer _area;
-    [SerializeField] private float _spacing = 8f;
-    protected override void SetUpPoints()
+    public class GreenSpace : Structure<GreenSpace>
     {
-        Vector3 size = new Vector3(10 * transform.lossyScale.x, 0, 10 * transform.lossyScale.z);
-
-        int stepsX = Mathf.FloorToInt(size.x / _spacing);
-        int stepsZ = Mathf.FloorToInt(size.z / _spacing);
-
-        Vector3 start =
-            transform.position - (transform.right * (stepsX * _spacing * 0.5f))
-                - (transform.forward * (stepsZ * _spacing * 0.5f));
-
-        HashSet<(RcVec3f, long)> samplePoints = new();
-
-        Vector3 worldPos;
-
-        for (int x = 0; x <= stepsX; x++)
+        [field:SerializeField] private Renderer _area;
+        [SerializeField] private float _spacing = 8f;
+        protected override void SetUpPoints()
         {
-            for (int z = 0; z <= stepsZ; z++)
+            Vector3 size = new Vector3(10 * transform.lossyScale.x, 0, 10 * transform.lossyScale.z);
+
+            int stepsX = Mathf.FloorToInt(size.x / _spacing);
+            int stepsZ = Mathf.FloorToInt(size.z / _spacing);
+
+            Vector3 start =
+                transform.position - (transform.right * (stepsX * _spacing * 0.5f))
+                    - (transform.forward * (stepsZ * _spacing * 0.5f));
+
+            HashSet<(RcVec3f, long)> samplePoints = new();
+
+            Vector3 worldPos;
+
+            for (int x = 0; x <= stepsX; x++)
             {
-                worldPos = start
-                    + (transform.right * (x * _spacing))
-                        + (transform.forward * (z * _spacing));
+                for (int z = 0; z <= stepsZ; z++)
+                {
+                    worldPos = start
+                        + (transform.right * (x * _spacing))
+                            + (transform.forward * (z * _spacing));
 
-                if ( DRcHandle.FindNearest(worldPos, out long polyRef, out RcVec3f polyPos, out _).Succeeded() &&  polyRef  != 0 )
-                    samplePoints.Add((polyPos, polyRef));
+                    if ( DRcHandle.FindNearest(worldPos, out long polyRef, out RcVec3f polyPos, out _).Succeeded() &&  polyRef  != 0 )
+                        samplePoints.Add((polyPos, polyRef));
+                }
             }
+
+            _places = samplePoints.ToArray();
+
+            foreach ((RcVec3f, long) pos in samplePoints)
+                _positions.Add(DRcHandle.ToUnityVec3(pos.Item1));
         }
-
-        _places = samplePoints.ToArray();
-
-        foreach ((RcVec3f, long) pos in samplePoints)
-            _positions.Add(DRcHandle.ToUnityVec3(pos.Item1));
     }
 }
