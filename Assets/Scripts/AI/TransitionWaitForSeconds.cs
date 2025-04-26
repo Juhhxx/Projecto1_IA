@@ -20,7 +20,7 @@ namespace Scripts.AI
             _timeElapsed += Time.deltaTime;
             return _timeElapsed == _seconds;
         }
-        public override void IntantiateTransition()
+        public override void InstantiateTransition()
         {
             gameObject = base.objectReference;
 

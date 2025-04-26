@@ -19,7 +19,7 @@ namespace Scripts.AI
         {
             return _agent.ExplosionRadius == _radius;
         }
-        public override void IntantiateTransition()
+        public override void InstantiateTransition()
         {
             gameObject = base.objectReference;
             _agent = gameObject.GetComponent<AgentStatsController>();

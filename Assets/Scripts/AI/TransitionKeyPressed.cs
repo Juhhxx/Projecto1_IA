@@ -18,7 +18,7 @@ namespace Scripts.AI
         {
             return Input.GetKeyDown(Key);
         }
-        public override void IntantiateTransition()
+        public override void InstantiateTransition()
         {
             base.transition = new Transition(base.Name,Condition,base.ToState.State,Action);
         }
