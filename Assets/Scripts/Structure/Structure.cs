@@ -22,7 +22,6 @@ namespace Scripts.Structure
         // one structure list per subclass
         protected static List<T> _structures = new List<T>();
         protected (RcVec3f, long)[] _places;
-        private Dictionary<long, int> _placeDict;
 
         public RcVec3f Position { get; private set; }
         public long Ref { get; private set; }
@@ -54,16 +53,12 @@ namespace Scripts.Structure
         private void StartStructure()
         {
             _rand = new SeedRandom(gameObject);
-            _placeDict = new Dictionary<long, int>();
 
             DRcHandle.FindNearest(_pivot.position, out long nearestRef, out RcVec3f nearestPt, out _);
             Ref = nearestRef;
             Position = nearestPt;
 
             SetUpPoints();
-
-            foreach ( (RcVec3f, long) y in _places )
-                _placeDict[y.Item2] = 0;
         }
 
         /// <summary>
