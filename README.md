@@ -125,7 +125,7 @@ The random generators support both:
 
 ### Agent FSMs
 
-For controlling the Agents behaviours, as referenced before, we chose to use a Finite State Machine System. We used the [examples available on moodle](https://moodle.ensinolusofona.pt/mod/resource/view.php?id=439813) as a base, and built uppon it for creating a system that would allow us to modularly create our State Machines via the Unity Inspector. This system allowed us to effortlessly mess and play with our Agents until we found thair behaviour to be adequate.
+For controlling the Agents behaviours, as referenced before, we chose to use a Finite State Machine System. We used the [examples available on moodle](https://moodle.ensinolusofona.pt/mod/resource/view.php?id=439813) as a base, and built upon it for creating a system that would allow us to modularly create our State Machines via the Unity Inspector. This system allowed us to effortlessly mess and play with our Agents until we found their behaviour to be adequate.
 
 We wounded up using the following State Machine model for all of our Agents:
 
@@ -586,6 +586,18 @@ observaram, realçando quaisquer correlações que tenham encontrado entre
 estes e as parametrizações que definiram, bem como resultados inesperados,
 propondo hipóteses explicativas.
 
+### Results
+
+When testing the simulation, we found some really interesting results and behaviours, that we noted as we were testing our scene with different values for our parameters, those are the following:
+
+* Some agents have the tendency to skip over to the next area objective (stages, green spaces, food areas), if the current path they are following is crowded with other agents, even if the next area is much farther away. This emerging behaviour mimics how humans usually go to the line next to them as "is seems faster";
+
+* Some agents have the tendency to start "going with the flow" of the crowd. For example, when an agent is walking in a certain direction, but passes through a group of agents going in a different direction, they tend to start following the group, as if they were part of a flock;
+
+* Agents in a state of panic tend to join together in big groups. These groups cause confusion and chaos among the agents, that bump against each other in their attempt to escape. This causes the groups to become stuck sometimes, and at exits creates big *bottleneck effects*  as all the agents are trying to get through a tight space at the same time;
+
+### Discussion
+
 ---
 
 ## Conclusion
@@ -600,10 +612,13 @@ detalhes.
 
 ## References
 
+* [Crowds in front of bottlenecks at entrances from the perspective of physics and social psychology](https://royalsocietypublishing.org/doi/10.1098/rsif.2019.0871)
+
 ### Videos
 
 * [UniRecast Setup Video (YouTube)](https://www.youtube.com/watch?v=lXHL1HFL5wo)
 * [Crowd Simulation Lecture (YouTube)](https://www.youtube.com/watch?v=ldOprmqSt7o)
+* [Unite 2016 - Overthrowing the MonoBehaviour Tyranny in a Glorious Scriptable Object Revolution](https://www.youtube.com/watch?v=6vmRwLYWNRo)
 
 ### Open Code
 
@@ -614,6 +629,7 @@ detalhes.
 * [DotRecast Unity Port Discussion (Unity Forum)](https://discussions.unity.com/t/dotrecast-a-port-of-recast-detour-navigation-mesh-toolset-for-games-unity3d-servers-c/930615)
 * [UniRecast GitHub Repository](https://github.com/ikpil/UniRecast)
 * [Reflection Probe Atlas Overhead Discussion (Unity Forum)](https://discussions.unity.com/t/update-reflection-probe-atlas-causing-large-overhead-in-empty-scene/1527603/5)
+* [Unity Simple FSMs Project - Moodle, Cadeira de IA](https://moodle.ensinolusofona.pt/mod/resource/view.php?id=439813)
 
 ### Libraries
 
