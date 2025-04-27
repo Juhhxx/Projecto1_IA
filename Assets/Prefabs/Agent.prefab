@@ -145,15 +145,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d18d228919984264eb111e23979e86a0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _maxSpeed: 5
+  _panicCheckRadius: 15
   _maxHunger: 100
   _hungerDepleationRate: 0.1
-  _hungryColor: {r: 0.4603061, g: 0.3496438, b: 0.2832464, a: 1}
   _maxEnergy: 100
   _energyDepleationRate: 0.1
-  _tiredColor: {r: 0.19668925, g: 0.5471268, b: 1, a: 1}
-  _depleationSpeed: 0.2
+  _depleationSpeed: 2
   _agentStat: 0
+  _hungryColor: {r: 0.4603061, g: 0.3496438, b: 0.2832464, a: 1}
+  _tiredColor: {r: 0.19668925, g: 0.5471268, b: 1, a: 1}
+  _paralyzedColor: {r: 0.47266468, g: 0, b: 0.92168033, a: 1}
+  _panicColor: {r: 1, g: 0.3780909, b: 0, a: 1}
   _acceptedDist: 6
   _crowd: {fileID: 0}
   _runner: {fileID: 3853728234938254601}

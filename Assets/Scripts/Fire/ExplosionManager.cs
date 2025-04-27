@@ -201,7 +201,7 @@ namespace Scripts.Fire
 
                 foreach ( long fireRef in resultRefs )
                 {
-                    Debug.DrawLine(_firePolys[polyRef].transform.position, _firePolys[fireRef].transform.position, Color.yellow, 5f);
+                    // Debug.DrawLine(_firePolys[polyRef].transform.position, _firePolys[fireRef].transform.position, Color.yellow, 5f);
                     if ( Rand.Range(0f, 1f) < _fireChance )
                         SetFire( fireRef );
                 }

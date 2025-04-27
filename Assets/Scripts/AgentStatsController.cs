@@ -13,11 +13,20 @@ namespace Scripts
 {
     public class AgentStatsController : MonoBehaviour
     {
+        [SerializeField] private StateMachineRunner _runner;
+        
         [Header("Movement Stats")]
         [Space(5f)]
-        [SerializeField] private float _maxSpeed;
+        [SerializeField] private DRCrowdManager _crowd;
+        [SerializeField] private float _panicCheckRadius;
+        [SerializeField] private float _acceptedDist = 2f;
+        public float AcceptedDist => _acceptedDist;
+        private DtCrowdAgent _agentID;
+        public DtCrowdAgent ID => _agentID;
+        public DRCrowdManager Crowd => _crowd;
 
-        private float _currentMaxSeed;
+        public (RcVec3f Pos, long Ref) NextRef { get; set; }
+
 
         [Space(10f)]
         [Header("Status Stats")]
@@ -37,19 +46,6 @@ namespace Scripts
         public Color TiredColor => _tiredColor;
         public Color ParalyzedColor => _paralyzedColor;
         public Color PanicColor => _panicColor;
-
-
-        [SerializeField] private float _acceptedDist = 2f;
-        public float AcceptedDist => _acceptedDist;
-        private DtCrowdAgent _agentID;
-        public DtCrowdAgent ID => _agentID;
-        [SerializeField] private DRCrowdManager _crowd;
-        public DRCrowdManager Crowd => _crowd;
-        [SerializeField] private StateMachineRunner _runner;
-
-        public (RcVec3f Pos, long Ref) LastRef { get; set; }
-        public (RcVec3f Pos, long Ref) CurRef { get; set; }
-        public (RcVec3f Pos, long Ref) NextRef { get; set; }
 
         private float _hungerLevel;
         private float _energyLevel;
@@ -89,7 +85,6 @@ namespace Scripts
         public void Activate()
         {
             Exit.GetRandomGoodExit( _crowd.Rand.Range(0, 32), out (RcVec3f, long) pos);
-            LastRef = pos;
 
             transform.position = _crowd.SnapToNavMesh(pos.Item1);;
             
@@ -112,16 +107,35 @@ namespace Scripts
             {
                 _lastPolyRef = currPolyRef;
                 if ( _crowd.Explosion.PolyHasFire(_lastPolyRef) )
-                    ExplosionRadius = 3;
+                {
+                    Deactivate();
+                    return;
+                }
             }
 
-            Profiler.BeginSample("DR Agent");
+            if ( _crowd.CheckForPanic( ( _agentID.npos, currPolyRef ), _panicCheckRadius) )
+            {
+                ExplosionRadius = 3;
+                Debug.Log("Found panic or fire, PANIC!!!!!");
+            }
 
+            // Profiler.BeginSample("DR Agent");
+
+            // handle movement visuals
             if ( _agentID != null )
             {
-                transform.position = DRcHandle.ToUnityVec3(_agentID.npos);
-                if ( _agentID.vel.Length() > 0.1f )
-                    transform.rotation = DRcHandle.ToDotQuat(_agentID.vel);
+                transform.position = Vector3.Lerp(
+                    transform.position,
+                    DRcHandle.ToUnityVec3(_agentID.npos),
+                    0.8f);
+
+                if (_agentID.vel.Length() > 0.1f)
+                {
+                    transform.rotation = Quaternion.Slerp(
+                        transform.rotation,
+                        DRcHandle.ToDotQuat(_agentID.vel),
+                        0.2f);
+                }
             }
         }
         public void UpdateOrdered()
@@ -297,7 +311,8 @@ namespace Scripts
 
         private void OnDrawGizmosSelected()
         {
-            Gizmos.DrawLine(transform.position, DRcHandle.ToUnityVec3(ID.targetPos) );
+            if ( ID != null )
+                Gizmos.DrawLine(transform.position, DRcHandle.ToUnityVec3(ID.targetPos) );
         }
     }
 }
