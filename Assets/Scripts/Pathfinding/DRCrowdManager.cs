@@ -23,7 +23,7 @@ namespace Scripts.Pathfinding
         [SerializeField] private DRcHandle _handle;
         [field:SerializeField] public ExplosionManager Explosion { get; private set; }
 
-        [SerializeField] private int _AgentsPerUpdateBatch = 500;
+        // [SerializeField] private int _AgentsPerUpdateBatch = 500;
         [SerializeField] private int _maxAgents = 100;
 
         // for object pooling
@@ -60,7 +60,7 @@ namespace Scripts.Pathfinding
         private IDtQueryFilter RegularFilter;
         private IDtQueryFilter PanicFilter;
 
-        private int _updateCursor = 0;
+        // private int _updateCursor = 0;
         private static Dictionary<long, int> _polyAgentCounts;
 
         /// <summary>
@@ -172,7 +172,7 @@ namespace Scripts.Pathfinding
 
             SetAgentCount();
 
-            if (_activeAgents.Count > 0)
+            /*if (_activeAgents.Count > 0)
             {
                 int skip = _updateCursor % _activeAgents.Count;
                 int updated = 0;
@@ -192,7 +192,7 @@ namespace Scripts.Pathfinding
                     if (updated >= _AgentsPerUpdateBatch)
                         break;
                 }
-            }
+            }*/
 
             if (Exit.AnyExitUnoccupied())
             {

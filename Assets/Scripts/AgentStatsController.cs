@@ -7,14 +7,16 @@ using Scripts.Pathfinding;
 using Scripts.Random;
 using Scripts.Structure;
 using UnityEngine;
-using UnityEngine.Profiling;
 
 namespace Scripts
 {
+    /// <summary>
+    /// Controls agent movement, behavior state, and visual representation in the simulation.
+    /// </summary>
     public class AgentStatsController : MonoBehaviour
     {
         [SerializeField] private StateMachineRunner _runner;
-        
+
         [Header("Movement Stats")]
         [Space(5f)]
         [SerializeField] private DRCrowdManager _crowd;
@@ -73,6 +75,9 @@ namespace Scripts
             }
         }
 
+        /// <summary>
+        /// Initializes references and cached values during scene load.
+        /// </summary>
         public void AwakeOrdered()
         {
             _random = new SeedRandom(gameObject);
@@ -82,6 +87,9 @@ namespace Scripts
             _wfsUpdate      = new WaitForSeconds(1f);
         }
 
+        /// <summary>
+        /// Activates the agent, spawning it and initializing its crowd behavior and state machine.
+        /// </summary>
         public void Activate()
         {
             Exit.GetRandomGoodExit( _crowd.Rand.Range(0, 32), out (RcVec3f, long) pos);
@@ -97,11 +105,15 @@ namespace Scripts
         }
 
         private long _lastPolyRef = 0;
+        /// <summary>
+        /// Updates agent logic each frame (movement visuals and fire/panic checking).
+        /// </summary>
         private void Update()
         {
             if ( _agentID == null ) return;
 
             long currPolyRef = _agentID.corridor.GetFirstPoly();
+            RcVec3f pos = _agentID.npos;
 
             if (currPolyRef != _lastPolyRef)
             {
@@ -113,43 +125,47 @@ namespace Scripts
                 }
             }
 
-            if ( _crowd.CheckForPanic( ( _agentID.npos, currPolyRef ), _panicCheckRadius) )
+            // handle smooth movement visuals
+            transform.position = Vector3.Lerp(
+                transform.position,
+                DRcHandle.ToUnityVec3(pos),
+                0.8f);
+
+            if (_agentID.vel.Length() > 0.1f)
+            {
+                transform.rotation = Quaternion.Slerp(
+                    transform.rotation,
+                    DRcHandle.ToDotQuat(_agentID.vel),
+                    0.15f);
+            }
+
+            if ( ExplosionRadius == 3 ) return;
+
+            if ( _crowd.CheckForPanic( ( pos, currPolyRef ), _panicCheckRadius) )
             {
                 ExplosionRadius = 3;
                 Debug.Log("Found panic or fire, PANIC!!!!!");
             }
-
-            // Profiler.BeginSample("DR Agent");
-
-            // handle movement visuals
-            if ( _agentID != null )
-            {
-                transform.position = Vector3.Lerp(
-                    transform.position,
-                    DRcHandle.ToUnityVec3(_agentID.npos),
-                    0.8f);
-
-                if (_agentID.vel.Length() > 0.1f)
-                {
-                    transform.rotation = Quaternion.Slerp(
-                        transform.rotation,
-                        DRcHandle.ToDotQuat(_agentID.vel),
-                        0.2f);
-                }
-            }
         }
-        public void UpdateOrdered()
+
+        /// <summary>
+        /// Ordered update for crowd agents. (Currently unused - only left for batching logic if needed).
+        /// </summary>
+        /*public void UpdateOrdered()
         {
-            /*Profiler.BeginSample("DR Agent");
+            Profiler.BeginSample("DR Agent");
 
             if ( _agentID != null )
             {
                 transform.position = DRcHandle.ToUnityVec3(_agentID.npos);
                 if ( _agentID.vel.Length() > 0.1f )
                     transform.rotation = DRcHandle.ToDotQuat(_agentID.vel);
-            }*/
-        }
+            }
+        }*/
 
+        /// <summary>
+        /// Deactivates the agent and returns it to the object pool.
+        /// </summary>
         public void Deactivate()
         {
             _crowd.RemoveAgent(_agentID);
@@ -295,9 +311,18 @@ namespace Scripts
         }
 
         #if UNITY_EDITOR
+        /// <summary> Sets manager references when baking in editor. </summary>
         public void SetRefs(DRCrowdManager manager)
         {
             _crowd = manager;
+        }
+        /// <summary>
+        /// Can check current agent's target when selecting it in Editor.
+        /// </summary>
+        private void OnDrawGizmosSelected()
+        {
+            if ( ID != null )
+                Gizmos.DrawLine(transform.position, DRcHandle.ToUnityVec3(ID.targetPos) );
         }
         #endif
 
@@ -307,12 +332,6 @@ namespace Scripts
                 return $"null";
 
             return $"[DRAgent] Pos: {_agentID.npos} | Target: {_agentID.targetPos} | Vel: {_agentID.vel} | State: {_agentID.state} | TargetState: {_agentID.targetState} | Speed: {_agentID.desiredSpeed }";
-        }
-
-        private void OnDrawGizmosSelected()
-        {
-            if ( ID != null )
-                Gizmos.DrawLine(transform.position, DRcHandle.ToUnityVec3(ID.targetPos) );
         }
     }
 }
