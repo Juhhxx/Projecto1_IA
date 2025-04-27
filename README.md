@@ -32,8 +32,8 @@
 
 ### Sprites
 
-  1. Agent: ![Agent Sprite](https://github.com/Juhhxx/LP2_4XGAME2/blob/main/Assets/Sprites/GrimReaperSprite.png)
-  2. `Fire`: ![`Fire` Sprite](https://github.com/Juhhxx/LP2_4XGAME2/blob/main/Assets/Sprites/MinerSprite.png)
+  1. Agent: ![Agent Sprite](https://github.com/Juhhxx/Projecto1_IA/blob/e098bf06dcadc7f4e1ab58de7da05d42be5b2261/Assets/Sprites/Player.png)
+  2. `Fire`: ![`Fire` Sprite](https://github.com/Juhhxx/Projecto1_IA/blob/e098bf06dcadc7f4e1ab58de7da05d42be5b2261/Assets/Sprites/fire.png)
 
 ### Explosion Ranges
 
@@ -302,39 +302,27 @@ Panic-mode heuristic that encourages moving away from `Fire`​. It computes a c
 
 ```mermaid
 classDiagram
+  class MonoBehaviour
+
+  class TabletopCamera
+
   class Manager
   class RandomManager
+  <<singleton>> RandomManager
   class DRcHandle
   class DRCrowdManager
 
-  Manager <|-- RandomManager
-  Manager <|-- DRcHandle
-  Manager <|-- DRCrowdManager
+  class UniRcNavMeshSurface
+  class UniRcConvexVolumeTool
+  class DtNavMesh
+  class DtNavMeshQuery
+  class IDtQueryFilter
 
-  class Structure
-  class Exit
-  class FoodArea
-  class GreenSpace
-  class Stage
-
-  Structure <|-- Exit
-  Structure <|-- FoodArea
-  Structure <|-- GreenSpace
-  Structure <|-- Stage
-
-  class ExplosionManager
-  class Fire
-
-  ExplosionManager *-- Fire
-
-  <<interface>> ISeedRandom
-  <<interface>> IRcRand
-  class SeedRandom
-  class RcSeedRandom
-
-  SeedRandom ..|> ISeedRandom
-  RcSeedRandom ..|> ISeedRandom
-  RcSeedRandom ..|> IRcRand
+  class DtQueryFilter
+  class DtQueryPanicFilter
+  class DtQueryPanicHeuristic
+  class DtQueryRegularFilter
+  class DtQueryRegularHeuristic
 
   class AgentStatsController
   class StateMachineRunner
@@ -344,12 +332,103 @@ classDiagram
   class StateTransition
   class Transition
 
-  DRCrowdManager --> AgentStatsController
-  DRCrowdManager --> DRcHandle
-  DRCrowdManager --> ExplosionManager
+  class Structure~T~
+  class Exit
+  class FoodArea
+  class GreenSpace
+  class Stage
+  class StateNavHelper
+  struct RcVec3f
+
+  enum AgentStat
+
+  class ISeedRandom
+  <<interface>> ISeedRandom
+  class  IRcRand
+  <<interface>> IRcRand
+  class SeedRandom
+  class RcSeedRandom
+
+  class ExplosionManager
+  class Fire
+
+
+  MonoBehaviour <|-- Structure~T~
+  MonoBehaviour <|-- TabletopCamera
+  MonoBehaviour <|-- Manager
+  MonoBehaviour <|-- AgentStatsController
+
+  Manager <|-- RandomManager
+  Manager <|-- DRcHandle
+  Manager <|-- DRCrowdManager
+
+
+
+  Structure~T~ --> RcVec3f
+  Structure~T~ --> ISeedRandom
+  Structure~T~ --> List~T~
+
+  Stage --|> Structure~Stage~
+  Stage --> DRcHandle
+
+  GreenSpace --|> Structure~GreenSpace~
+  GreenSpace --> DRcHandle
+  
+  FoodArea --|> Structure~FoodArea~
+  FoodArea --> DRcHandle
+
+  Exit --|> Structure~Exit~
+  Exit --> DRcHandle
+
+  StateNavHelper --> AgentStatsController
+  StateNavHelper --> Structure~T~
+  StateNavHelper --> RcVec3f
+
+
+
+  ExplosionManager *-- Fire
+
+
+  RandomManager --> ISeedRandom
+  RandomManager --> System.Random
+  ISeedRandom --> System.Random
+  SeedRandom --|> ISeedRandom
+  SeedRandom --> RandomManager
+  RcSeedRandom --> RandomManager
+  RcSeedRandom ..|> ISeedRandom
+  RcSeedRandom ..|> IRcRand
+
+
+
+  DRCrowdManager o-- DRcHandle
+  DRCrowdManager o-- ExplosionManager
+  DRCrowdManager o-- AgentStatsController
+  DRCrowdManager o-- ISeedRandom
+  DRCrowdManager o-- DtCrowd
+  DRCrowdManager o-- DtCrowdAgentParams
+
+  AgentStatsController --> DtCrowdAgent
+  DRCrowdManager --> RcVec3f
+
+
+
+  DRcHandle o-- Manager
+  DRcHandle --> UniRcNavMeshSurface
+  DRcHandle --> UniRcConvexVolumeTool
+  DRcHandle --> DtNavMesh
+  DRcHandle --> DtNavMeshQuery
+  DRcHandle --> IDtQueryFilter
+
+
+
+
 
   AgentStatsController --> DRCrowdManager
   AgentStatsController --> StateMachineRunner
+
+  AgentStatsController --> DtCrowdAgent
+  AgentStatsController --> AgentStat
+  AgentStatsController --> ISeedRandom
 
   StateMachineRunner --> StateMachine
   StateMachine *-- StateAbstract
