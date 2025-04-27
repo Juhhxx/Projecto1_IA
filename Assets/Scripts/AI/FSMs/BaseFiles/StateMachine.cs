@@ -20,14 +20,14 @@ namespace Scripts.AI.FSMs.BaseFiles
         }
 
         /// <summary>
-        /// Method that restes the State Machine to it's default State, without triggering any Transitions.
+        /// Method that resets the State Machine to it's default State, without triggering any Transitions.
         /// </summary>
         public void ResetStateMachine()
         {
             _currentState = _initialState;
         }
         /// <summary>
-        /// Method that runs the State Machines Actiosn and manages all States.
+        /// Method that runs the State Machines Actions and manages all States.
         /// </summary>
         /// <returns></returns>
         public Action Update()

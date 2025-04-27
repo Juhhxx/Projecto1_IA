@@ -20,7 +20,7 @@ namespace Scripts.AI.FSMs.UnityIntegration
         protected GameObject objectReference;
 
         /// <summary>
-        /// Metohd for checking if the Transition was triggered.
+        /// Method for checking if the Transition was triggered.
         /// </summary>
         /// <returns>If the Transition has been triggered.</returns>
         public bool IsTriggered() => transition.IsTriggered();
@@ -37,7 +37,7 @@ namespace Scripts.AI.FSMs.UnityIntegration
         /// <summary>
         /// Abstract method for defining the Transitions conditions.
         /// </summary>
-        /// <returns>If the condtions have been met.</returns>
+        /// <returns>If the conditions have been met.</returns>
         protected abstract bool Condition();
         /// <summary>
         /// Abstract method for instantiating a Transition.

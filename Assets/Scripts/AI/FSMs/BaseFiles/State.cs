@@ -11,7 +11,7 @@ namespace Scripts.AI.FSMs.BaseFiles
         // Name of the State.
         public string Name {get; private set; }
 
-        // Actions to be executed in the beggining, during and end of this State.
+        // Actions to be executed in the beginning, during and end of this State.
         public Action EntryActions { get; private set; }
         public Action StateActions { get; private set; }
         public Action ExitActions { get; private set; }
@@ -30,9 +30,9 @@ namespace Scripts.AI.FSMs.BaseFiles
         }
 
         /// <summary>
-        /// Meyhod for adding a Trasition to the State.
+        /// Method for adding a Transition to the State.
         /// </summary>
-        /// <param name="transition">Trasition to be added.</param>
+        /// <param name="transition">Transition to be added.</param>
         public void AddTransition(Transition transition)
         {
             _transitions.Add(transition);

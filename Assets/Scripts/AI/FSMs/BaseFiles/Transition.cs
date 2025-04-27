@@ -25,7 +25,7 @@ namespace Scripts.AI.FSMs.BaseFiles
             Actions = actions;
         }
         /// <summary>
-        /// Mehod that checks if the transitions was triggered.
+        /// Method that checks if the transitions was triggered.
         /// </summary>
         /// <returns>If the transition was triggered.</returns>
         public bool IsTriggered()
