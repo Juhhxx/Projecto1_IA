@@ -283,6 +283,10 @@ namespace Scripts.Pathfinding
         /// </summary>
         public void ExplosionAt(RcVec3f center, float deathRadius, float fearRadius, float panicRadius)
         {
+            cnt = DRcHandle.ToUnityVec3(center);
+            death = deathRadius;
+            fear = fearRadius;
+            panic = panicRadius;
             float deathRadiusSq = deathRadius * deathRadius;
             float fearRadiusSq = fearRadius * fearRadius;
             float panicRadiusSq = panicRadius * panicRadius;
@@ -296,12 +300,24 @@ namespace Scripts.Pathfinding
                     (agent.ID.npos.Z - center.Z) * (agent.ID.npos.Z - center.Z);
 
                 if (distSq <= deathRadiusSq)
-                    agent.ExplosionRadius = 1;
+                    agent.Deactivate(); // agent.ExplosionRadius = 1;
                 else if (distSq <= fearRadiusSq)
                     Paralyze(agent);
                 else if (distSq <= panicRadiusSq)
                     Panic(agent);
             }
+        }
+
+        float death;
+        float fear;
+        float panic;
+        Vector3 cnt;
+
+        private void OnDrawGizmos()
+        {
+            Gizmos.DrawWireSphere(cnt, death);
+            Gizmos.DrawWireSphere(cnt, fear);
+            Gizmos.DrawWireSphere(cnt, panic);
         }
 
         /// <summary>
@@ -310,10 +326,11 @@ namespace Scripts.Pathfinding
         /// <param name="agent"></param>
         private void Paralyze(AgentStatsController agent)
         {
-            Debug.Log("Paralyze");
+            Debug.Log("Paralyze1");
             agent.ExplosionRadius = 1;
 
             _crowd.UpdateAgentParameters(agent.ID, _paralyzedParams);
+            _crowd.ResetMoveTarget(agent.ID);
         }
 
         /// <summary>
@@ -322,7 +339,7 @@ namespace Scripts.Pathfinding
         /// <param name="agent"></param>
         public void Panic(AgentStatsController agent) // TODO
         {
-            Debug.Log("Panic");
+            Debug.Log("Panic set");
             // warn all in range agents to panic
             agent.ExplosionRadius = 2;
 
