@@ -19,7 +19,7 @@ namespace Scripts.AI
             _agent.Crowd.SetTarget(_agent.ID, _food.Ref, _food.Position);
 
 
-            Debug.Log($"Start State {Name}");
+            // Debug.Log($"Start State {Name}");
             _agent.ChangeColor(_agent.HungryColor);
             _agent.StartDepletingEnergy();
         }
@@ -30,7 +30,7 @@ namespace Scripts.AI
         }
         protected override void ExitAction()
         {
-            Debug.Log($"Exiting State {Name}");
+            // Debug.Log($"Exiting State {Name}");
             _agent.StopDepletingEnergy();
         }
         public override void InstantiateState()

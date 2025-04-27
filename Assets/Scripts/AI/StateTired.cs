@@ -19,7 +19,7 @@ namespace Scripts.AI
             _green = GreenSpace.FindNearest(_agent.ID.npos);
             _agent.Crowd.SetTarget(_agent.ID, _green.Ref, _green.Position);
 
-            Debug.Log($"Start State {Name}");
+            // Debug.Log($"Start State {Name}");
             _agent.ChangeColor(_agent.TiredColor);
             _agent.StartDepletingHunger();
         }
@@ -30,7 +30,7 @@ namespace Scripts.AI
         }
         protected override void ExitAction()
         {
-            Debug.Log($"Exiting State {Name}");
+            //Debug.Log($"Exiting State {Name}");
             _agent.StopDepletingHunger();
         }
         public override void InstantiateState()

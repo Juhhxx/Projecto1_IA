@@ -201,6 +201,7 @@ namespace Scripts.Pathfinding
                 {
                     agent.gameObject.SetActive(true);
                     agent.Activate();
+                    
                     _inactiveAgents.Remove(agent);
                     _activeAgents.Add(agent);
                 }
@@ -225,9 +226,12 @@ namespace Scripts.Pathfinding
         /// </summary>
         public void RemoveAgent(AgentStatsController agentId)
         {
+            _crowd.RemoveAgent(agentId.ID);
+
+            Debug.Log("Removed agent");
+
             _activeAgents.Remove(agentId);
             _inactiveAgents.Add(agentId);
-            _crowd.RemoveAgent(agentId.ID);
         }
 
         /// <summary>
@@ -293,7 +297,9 @@ namespace Scripts.Pathfinding
             float fearRadiusSq = fearRadius * fearRadius;
             float panicRadiusSq = panicRadius * panicRadius;
 
-            foreach (AgentStatsController agent in _activeAgents)
+            AgentStatsController[] curActive = _activeAgents.ToArray();
+
+            foreach (AgentStatsController agent in curActive)
             {
                 if ( agent.ID == null ) continue;
 
@@ -341,7 +347,6 @@ namespace Scripts.Pathfinding
         /// <param name="agent"></param>
         public void Panic(AgentStatsController agent) // TODO
         {
-            Debug.Log("Panic set");
             // warn all in range agents to panic
             agent.ExplosionRadius = 3;
 

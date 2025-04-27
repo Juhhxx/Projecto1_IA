@@ -30,10 +30,10 @@ namespace Scripts.AI.FSMs.UnityIntegration
             // Instantiate all States.
             foreach (StateTransition st in StateTransitions)
             {
-                Debug.Log($"Initializing State {st.State.name} {st.State.State == null}");
+                // Debug.Log($"Initializing State {st.State.name} {st.State.State == null}");
                 st.State.SetObjectReference(_objectReference);
                 st.State.InstantiateState();
-                Debug.Log($"Initialized State {st.State.name} {st.State.State == null}");
+                // Debug.Log($"Initialized State {st.State.name} {st.State.State == null}");
             }
             // Instantiate all Transitions and add them to their respective States.
             foreach (StateTransition st in StateTransitions)

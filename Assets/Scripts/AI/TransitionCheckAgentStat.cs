@@ -13,7 +13,7 @@ namespace Scripts.AI
 
         protected override void Action()
         {
-            Debug.Log($"The agent is {Stat}");
+            // Debug.Log($"The agent is {Stat}");
         }
         protected override bool Condition()
         {

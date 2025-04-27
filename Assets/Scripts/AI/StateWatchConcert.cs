@@ -19,7 +19,7 @@ namespace Scripts.AI
             _stage = Stage.FindNearest(_agent.ID.npos);
             _agent.Crowd.SetTarget(_agent.ID, _stage.Ref, _stage.Position);
 
-            Debug.Log($"Start State {Name}");
+            // Debug.Log($"Start State {Name}");
             _agent.ChangeColor(_agent.NormalColor);
             _agent.StartDepletingHunger();
             _agent.StartDepletingEnergy();
@@ -31,7 +31,7 @@ namespace Scripts.AI
         }
         protected override void ExitAction()
         {
-            Debug.Log($"Exiting State {Name}");
+            // Debug.Log($"Exiting State {Name}");
             _agent.StopDepletingHunger();
             _agent.StopDepletingEnergy();
         }

@@ -80,7 +80,7 @@ namespace Scripts
         /// </summary>
         public void AwakeOrdered()
         {
-            _random = new SeedRandom(gameObject);
+            _random = _crowd.Rand;
             _renderer       = GetComponentInChildren<Renderer>();
             _normalColor    = _renderer.material.color;
             _wfsChange      = new WaitForSeconds(_depleationSpeed);
@@ -92,6 +92,8 @@ namespace Scripts
         /// </summary>
         public void Activate()
         {
+            ExplosionRadius = 0;
+
             Exit.GetRandomGoodExit( _crowd.Rand.Range(0, 32), out (RcVec3f, long) pos);
 
             transform.position = _crowd.SnapToNavMesh(pos.Item1);;
@@ -167,11 +169,10 @@ namespace Scripts
         /// </summary>
         public void Deactivate()
         {
+            gameObject.SetActive(false);
+            _runner.enabled = false;
             _crowd.RemoveAgent(this);
             _agentID = null;
-            _runner.enabled = false;
-            
-            gameObject.SetActive(false);
         }
 
         public void ChooseRandomState()
@@ -180,7 +181,11 @@ namespace Scripts
 
             Array enumValues    = Enum.GetValues(typeof(AgentStat));
             int enumLengh       = enumValues.Length;
-            startingStat        = (AgentStat)enumValues.GetValue(_random.Range(0, enumLengh));
+            
+            int rand = _random.Range(0, enumLengh*3);
+            if ( rand >= enumLengh) rand = 0;
+
+            startingStat        = (AgentStat)enumValues.GetValue(rand);
 
             if (startingStat == AgentStat.Hungry)
             {
@@ -268,7 +273,7 @@ namespace Scripts
         }
         public void ReturnToNormal()
         {
-            Debug.Log("Returning to Normal");
+            // Debug.Log("Returning to Normal");
             if (_agentStat == AgentStat.Hungry)
             {
                 if (_changeHunger == null) _changeHunger = StartCoroutine(ChangeHunger(false));

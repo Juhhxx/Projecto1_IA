@@ -14,14 +14,14 @@ namespace Scripts.AI
         {
             _agent.Deactivate();
 
-            Debug.Log($"Start State {Name}");
+            // Debug.Log($"Start State {Name}");
         }
         protected override void StateAction()
         {
         }
         protected override void ExitAction()
         {
-            Debug.Log($"Exiting State {Name}");
+            // Debug.Log($"Exiting State {Name}");
         }
         public override void InstantiateState()
         {
