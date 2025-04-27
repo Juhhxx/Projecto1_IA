@@ -1,6 +1,7 @@
 using DotRecast.Core.Numerics;
 using DotRecast.Detour;
 using Scripts.Fire;
+using UnityEngine;
 
 namespace Scripts.Pathfinding.DotRecast
 {
@@ -26,9 +27,9 @@ namespace Scripts.Pathfinding.DotRecast
         /// </summary>
         public override float GetCost(RcVec3f pa, RcVec3f pb, long prevRef, DtMeshTile prevTile, DtPoly prevPoly, long curRef, DtMeshTile curTile, DtPoly curPoly, long nextRef, DtMeshTile nextTile, DtPoly nextPoly)
         {
-            float value = RcVec3f.Distance(pa, pb);
+            float value = RcVec3f.DistanceSquared(pa, pb);
 
-            float expl = RcVec3f.Distance(_explosion.LatestExplosion, pa);
+            float expl = RcVec3f.DistanceSquared(_explosion.LatestExplosion, pa);
 
             // If the explosion is closer than the target and within 150 units
             if (expl > value && expl < 150f)
@@ -38,7 +39,11 @@ namespace Scripts.Pathfinding.DotRecast
                 expl = 0;
             
             if ( _explosion.PolyHasFire(curRef) )
+            {
+                Debug.Log("Has fire!!! value bf " + value +" now: " + value *10);
+                Debug.Log("Also explosion range expl: " + expl);
                 value *= 10;
+            }
             
             return value + expl;
         }
