@@ -335,6 +335,7 @@ Class, that inherits from `Monobhehaviour`, it contains a reference to a `StateM
 ```mermaid
 classDiagram
   class MonoBehaviour
+  class ScriptableObject
 
   class TabletopCamera
 
@@ -361,7 +362,9 @@ classDiagram
   class StateMachine
   class StateAbstract
   class TransitionAbstract
+  <<abstract>> TransitionAbstract
   class StateTransition
+  <<struct>> StateTransition
   class Transition
 
   class Structure~T~
@@ -389,10 +392,13 @@ classDiagram
   MonoBehaviour <|-- TabletopCamera
   MonoBehaviour <|-- Manager
   MonoBehaviour <|-- AgentStatsController
+  MonoBehaviour <|-- Fire
+  MonoBehaviour <|-- StateMachineRunner
 
   Manager <|-- RandomManager
   Manager <|-- DRcHandle
   Manager <|-- DRCrowdManager
+  Manager <|-- ExplosionManager
 
 
 
@@ -419,6 +425,11 @@ classDiagram
 
 
   ExplosionManager *-- Fire
+  Fire --> ExplosionManager
+  ExplosionManager --> DRcHandle
+  ExplosionManager --> DRCrowdManager
+  ExplosionManager --> Fire
+  ExplosionManager --> ISeedRandom
 
 
   RandomManager --> ISeedRandom
@@ -452,6 +463,104 @@ classDiagram
   DRcHandle --> IDtQueryFilter
 
 
+
+  class State
+  <<abstract>> State
+  class StateMachine
+  class Transition
+  class StateAbstract
+  <<abstract>>> StateAbstract
+  class StateMachineCreator
+  class TransitionAbstract
+
+
+  State --> Transition
+
+  StateMachine --> State
+  StateMachine --> Transition
+
+  Transition --> State
+
+  StateAbstract --|> ScriptableObject
+  StateAbstract --> State
+  StateAbstract --> TransitionAbstract
+
+  StateMachineCreator --|> ScriptableObject
+  StateMachineCreator --> StateMachine
+  StateMachineCreator --> GameObject
+  StateMachineCreator --> StateAbstract
+  StateMachineCreator o-- StateTransition
+  StateTransition --> StateAbstract
+  StateTransition o-- TransitionAbstract
+
+  TransitionAbstract --|> ScriptableObject
+  TransitionAbstract --> Transition
+  TransitionAbstract --> StateAbstract
+  TransitionAbstract --> GameObject
+
+
+  class TransitionCheckAgentStat
+  class TransitionCheckExplosionRadius
+  class TransitionKeyPressed
+  class TransitionWaitForSeconds
+
+
+  TransitionCheckAgentStat --|> TransitionAbstract
+  TransitionCheckAgentStat --> GameObject
+  TransitionCheckAgentStat --> AgentStatsController
+  TransitionCheckAgentStat --> AgentStat
+
+  TransitionCheckExplosionRadius --|> TransitionAbstract
+  TransitionCheckExplosionRadius --> GameObject
+  TransitionCheckExplosionRadius --> AgentStatsController
+
+  TransitionKeyPressed --|> TransitionAbstract
+  TransitionKeyPressed --> KeyCode
+
+  TransitionWaitForSeconds --|> TransitionAbstract
+  TransitionWaitForSeconds --> GameObject
+
+
+
+  class StateDeath
+  class StateHungry
+  class StatePanic
+  class StateParalyzed
+  class StateTired
+  class StateWatchConcert
+  
+
+  StateDeath --|> StateAbstract
+  StateDeath --> GameObject
+  StateDeath --> AgentStatsController
+
+  StateHungry --|> StateAbstract
+  StateHungry --> GameObject
+  StateHungry --> AgentStatsController
+  StateHungry --> Structure~FoodArea~
+  StateHungry --> StateNavHelper
+
+  StatePanic --|> StateAbstract
+  StatePanic --> GameObject
+  StatePanic --> AgentStatsController
+  StatePanic --> Structure~Exit~
+  StatePanic --> StateNavHelper
+
+  StateParalyzed --|> StateAbstract
+  StateParalyzed --> GameObject
+  StateParalyzed --> AgentStatsController
+
+  StateTired --|> StateAbstract
+  StateTired --> GameObject
+  StateTired --> AgentStatsController
+  StateTired --> Structure~GreenSpace~
+  StateTired --> StateNavHelper
+
+  StateWatchConcert --|> StateAbstract
+  StateWatchConcert --> GameObject
+  StateWatchConcert --> AgentStatsController
+  StateWatchConcert --> Structure~Stage~
+  StateWatchConcert --> StateNavHelper
 
 
 
