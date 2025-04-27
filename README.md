@@ -20,6 +20,39 @@
 
 ---
 
+## Visual Representations
+
+### State Colors
+
+  1. Normal 🟨 (Yellow  #FFD700)
+  2. Hungry 🟫 (Brown #5A4633)
+  3. Tired 🟦 (Blue #4BA6FF)
+  4. Paralyzed 🟪 (Purple #9E00FF)
+  5. Panic 🟧 (Orange #FF6D00)
+
+### Sprites
+
+  1. Agent: ![Agent Sprite](https://github.com/Juhhxx/LP2_4XGAME2/blob/main/Assets/Sprites/GrimReaperSprite.png)
+  2. Fire: ![Fire Sprite](https://github.com/Juhhxx/LP2_4XGAME2/blob/main/Assets/Sprites/MinerSprite.png)
+
+### Explosion Ranges
+
+  1. Death: 🟧 (Orange #FF6D00) Sphere
+  2. Paralyze: Second Wire Sphere
+  3. Panic: Third Wire Sphere
+
+### Structures
+
+  1. Food Area: 🟧 (Orange #FF6D00) Sphere
+  2. Green Space: 🟩 (Green #32CD32) Sphere
+  3. Stage: 🟥 (Red #FF0000) Sphere
+  4. Exit: 🟪 (Purple #9E00FF)
+  5. Path: ⬜ (Gray #808080)
+  6. Less Desirable Path: ⬜⬛ (Dark Gray #404040)
+  7. Blockage: ⬛ (Black #000000)
+
+---
+
 ## Introduction
 
 • Pequena descrição sobre o problema e a forma como o resolveram. Deve oferecer ao leitor informação suficiente para entender e contextualizar o projeto,
@@ -84,6 +117,10 @@ We wounded up using the following State Machine model for all of our Agents:
 ### Architecture
 
 #### Organizations and Algorithms
+
+##### `Controller`
+
+* Loads terrain data into `Tile` objects and places them in dictionaries, to then copy and create tiles in the grid from.
 
 ##### `Controller`
 
