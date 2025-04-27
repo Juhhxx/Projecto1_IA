@@ -12,6 +12,9 @@ using UnityEngine.Profiling;
 
 namespace Scripts.Fire
 {
+    /// <summary>
+    /// Manages fire propagation, explosion effects, and coordination with the crowd system.
+    /// </summary>
     public class ExplosionManager : Manager
     {
         [SerializeField] private DRcHandle _handle;
@@ -35,6 +38,9 @@ namespace Scripts.Fire
         
         public ISeedRandom Rand { get; private set; }
 
+        /// <summary>
+        /// Initializes fire pools and poly references.
+        /// </summary>
         internal protected override void AwakeOrdered()
         {
             _activeFires = new List<Fire>();
@@ -61,6 +67,9 @@ namespace Scripts.Fire
         internal protected override void StartOrdered(){}
 
         #if UNITY_EDITOR
+        /// <summary>
+        /// Editor only method to bake fire objects on all navmesh polys.
+        /// </summary>
         internal protected override void Bake()
         {
             _firePolys = new Dictionary<long, Fire>();
@@ -97,6 +106,9 @@ namespace Scripts.Fire
             // Undo.CollapseUndoOperations(group);
         }
 
+        /// <summary>
+        /// Instantiates a new Fire object and sets up its neighbor references.
+        /// </summary>
         private void NewFire(long polyRef)
         {
             GameObject newFire = (GameObject) PrefabUtility.InstantiatePrefab(_firePrefab, transform); // keep hierarchy clean
@@ -111,6 +123,7 @@ namespace Scripts.Fire
 
             IList<long> neighborRefs = new List<long>();
 
+            // Collect neis - neighbors
             for (int edge = 0; edge < poly.vertCount; edge++)
             {
                 int nei = poly.neis[edge];
@@ -148,6 +161,9 @@ namespace Scripts.Fire
             // Undo.RegisterCreatedObjectUndo(newFire, "Bake Fire");
         }
 
+        /// <summary>
+        /// Creates a fire object only if not already present.
+        /// </summary>
         private void NewFirePoly(long polyRef)
         {
             if (_firePolys.ContainsKey(polyRef))
@@ -157,14 +173,17 @@ namespace Scripts.Fire
         #endif
 
         private int _updateCursor = 0;
+        /// <summary>
+        /// Updates fire propagation and handles random explosions.
+        /// </summary>
         internal protected override void UpdateOrdered()
         {
-            if (Time.frameCount % _runEveryframe != 0) // run every 2 frames
+            if (Time.frameCount % _runEveryframe != 0) // run every _runEveryframe frames
                 return;
 
             Profiler.BeginSample("DRC ExplosionManager");
-            // run fire update only every _RunFireEveryFrame frames
 
+            // Randomly trigger an explosion
             if ( Rand.Range(0f, 1f) < _explosionChancePerFrame )
             {
                 DRcHandle.NavQuery.FindRandomPoint(DRcHandle.Filter, Rand as IRcRand, out long polyRef, out RcVec3f centerPos);
@@ -188,20 +207,18 @@ namespace Scripts.Fire
                 }
             }
 
-            int offset = Mathf.Min(_FirePerUpdateBatch, _activeFires.Count);
-
-            for (int i = 0; i < offset; i++)
-                _activeFires[i].UpdateOrdered();
-
-            int count = _activeFires.Count;
-
-            for (int i = 0; i < _FirePerUpdateBatch && count > 0; i++)
+            // Update active fires batch by batch
+            for (int i = 0; i < _FirePerUpdateBatch && _activeFires.Count > 0; i++)
             {
-                _activeFires[_updateCursor % count].UpdateOrdered();
+                int safeIndex = _updateCursor % _activeFires.Count;
+                _activeFires[safeIndex].UpdateOrdered();
                 _updateCursor++;
             }
         }
 
+        /// <summary>
+        /// Plays explosion visual effect by growing and shrinking the explosion object.
+        /// </summary>
         private IEnumerator ExplodeAt(Vector3 pos, float radius)
         {
             _explosionObject.SetActive(true);
@@ -226,10 +243,8 @@ namespace Scripts.Fire
         }
 
         /// <summary>
-        /// To be used by tile filters
+        /// Checks if a polygon currently has active fire.
         /// </summary>
-        /// <param name="polyRef"></param>
-        /// <returns></returns>
         public bool PolyHasFire(long polyRef)
         {
             if ( _firePolys.TryGetValue(polyRef, out var fire) && fire != null )
@@ -243,6 +258,9 @@ namespace Scripts.Fire
             return false;
         }
 
+        /// <summary>
+        /// Activates fire on a given polygon, if not already active.
+        /// </summary>
         public bool SetFire(long polyRef)
         {
             if ( _firePolys.TryGetValue(polyRef, out var fire) && fire != null )
@@ -260,14 +278,18 @@ namespace Scripts.Fire
             return false;
         }
 
+        /// <summary>
+        /// Deactivates a fire and returns it to the inactive pool.
+        /// </summary>
         public bool UnSetFire(Fire fire)
         {
             if ( _inactiveFires.Contains(fire) )
                 return false;
-                _inactiveFires.Add(fire);
-                _activeFires.Remove(fire);
+
+            _activeFires.Remove(fire);
+            _inactiveFires.Add(fire);
             
-            Debug.LogWarning("Fire already extinguished: " + " " + _firePolys.Count);
+            // Debug.LogWarning("Fire already extinguished: " + " " + _firePolys.Count);
             return false;
         }
     }
