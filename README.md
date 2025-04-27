@@ -99,6 +99,19 @@ For our project this means defining states and values clearly, having a modular 
 
 ---
 
+### Bake Instructions
+
+Baking is necessary to reload navmesh data and update agent number. To rebake the MAIN scene:
+
+1. Remove all Agent prefab children from Crowd Manager game object.
+2. Remove all Fire prefab children from NavMesh Bakery game object.
+3. Find `DRcHandle` component inside Manager game object.
+4. Under `DRCrowdManager` select max number of agents to test.
+5. Right click `DRcHandle` and select “Bake NavMesh int Scene”
+6. Wait for load.
+
+---
+
 ## Methodology
 
 To achieve a scalable and efficient simulation we chose a 2.5D approach where agents are represented with 2D sprites, while the environment uses basic 3D geometry that allows us to bake and query a DotRecast navigation mesh.
