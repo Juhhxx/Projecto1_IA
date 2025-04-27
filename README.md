@@ -64,9 +64,6 @@
 
 ## Introduction
 
-• Pequena descrição sobre o problema e a forma como o resolveram. Deve oferecer ao leitor informação suficiente para entender e contextualizar o projeto,
-bem como quais foram os objetivos e resultados alcançados.
-
 This project aims to simulate crowd behaviour at large scale events with different settings like concert `Stage`s, food courts and green spaces. Here agents move around independently according to their needs (watching shows, resting or eating), and react to hazards that incite panic like explosions and `Fires`, where the agents must try to escape through the `Exit`s of the event.
 
 To achieve an efficient simulation with support for a high number of agents simultaneously, we chose to use **DotRecast**, a library that allows the generation of navigation meshes (navmeshes) and path calculation based on the A* algorithm, and should optimize pathfinding without relying on too detailed physics. We also implemented a **finite state machine (FSM)** to control each agent's high-level decisions with the same intent, as the required states, watching concert, eating, resting and panicked are few, and therefore a good number for FSM implementation.
@@ -576,43 +573,66 @@ classDiagram
 
 ## Results and Discussion
 
-• Apresentação dos resultados, salientando os aspetos mais interessantes que
-observaram na simulação, em particular se observaram comportamento emergente, isto é, comportamento que não foi explicitamente programado nos agentes.
-• Caso tenham experimentado diferentes parâmetros (nº de saídas, nº de agentes, tempos de espera entre zonas, velocidades, taxa de propagação dos incêndios, taxa de propagação do pânico, etc), e/ou quantidade e/ou local das
-explosões, podem apresentar quadros, tabelas e/ou gráficos com informação
-que considerem importante.
-• Na parte da discussão, devem fazer uma interpretação dos resultados que
-observaram, realçando quaisquer correlações que tenham encontrado entre
-estes e as parametrizações que definiram, bem como resultados inesperados,
-propondo hipóteses explicativas.
+In the early stages of the project, a lot of time was spent experimenting and attempting to understand dotrecast library’s functionality, including developing test scripts that were later removed once a clearer implementation path was established.
 
-### Results
+This led to wasted time implementing behavior that already existed, but once basic crowd navigation was functioning, the redundancy was worth it, as it was a valuable learning about DotRecast’s architecture, and we were able to confirm the advantages of it.
 
-When testing the simulation, we found some really interesting results and behaviours, that we noted as we were testing our scene with different values for our parameters, those are the following:
+Some of the advantages we found of dotrecast were:
 
-* Some agents have the tendency to skip over to the next area objective (stages, green spaces, food areas), if the current path they are following is crowded with other agents, even if the next area is much farther away. This emerging behaviour mimics how humans usually go to the line next to them as "is seems faster";
+  1. Runs faster as DotRecast is a C# port of C++ Recast and Detour libraries.
+  2. Comes with DetourCrowd, which handles agent local avoidance and herd behavior
+  3. Super custom, custom filters, heuristics, and costs.
+  4. It allows you to handle movement without relying on Unity’s physics and rigidbody updates per agent.
 
-* Some agents have the tendency to start "going with the flow" of the crowd. For example, when an agent is walking in a certain direction, but passes through a group of agents going in a different direction, they tend to start following the group, as if they were part of a flock;
+Although we did not apply this, dynamic navmesh allows updating only the tiles affected by change, so we don't have to rebake entire navmeshes at runtime.
 
-* Agents in a state of panic tend to join together in big groups. These groups cause confusion and chaos among the agents, that bump against each other in their attempt to escape. This causes the groups to become stuck sometimes, and at exits creates big *bottleneck effects*  as all the agents are trying to get through a tight space at the same time;
+One of the most impactful optimizations to the crowd system was the implementation of update batching for agents and fire objects which allowed the simulation to maintain stable performance even with 2000 agents.
 
-### Discussion
+Although it does make the path movement choppy, we started to use the regular update for only visual movement smoothing, even when desynchronized from the real agent positions, as it maintained the appearance of constant activity even when agentes were not actively updating their paths.
+
+Testing of this began with around 500 agents and progressively scaled up, and using the Unity Profiler, we implemented optimization changes such as using unlit materials, SRP rendering, disabling lighting, minimizing camera movement updates, and enabling GPU instancing.
+Slowly we started achieving stable simulations of up to 2500 agents. At 1000 agents, the simulation averaged around 50 FPS, while at 2000 agents it dropped to approximately 5 FPS on a Zephyrus G14 laptop.
+
+| Number of Agents | Average FPS (Zephyrus G14) |
+|------------------|----------------------------|
+| 500              | ~90 FPS                    |
+| 1000             | ~50 FPS                    |
+| 2000             | ~5 FPS                     |
+| 2500             | ~2 FPS                     |
+
+With the finished project, we found while testing interesting results and behaviours, that we noted as we were testing our scene with different values for our parameters, those are the following:
+
+* **Human Social Behavior** -
+  Some agents have the tendency to skip over to the next area objective (stages, green spaces, food areas), if the current path they are following is crowded with other agents, even if the next area is much farther away. This emerging behaviour mimics how humans usually go to the line next to them as "is seems faster";
+
+  Some agents have the tendency to start "going with the flow" of the crowd. For example, when an agent is walking in a certain direction, but passes through a group of agents going in a different direction, they tend to start following the group, as if they were part of a flock;
+
+* **Bottlenecks** -
+  Agents in a state of panic tend to join together in big groups. These groups cause confusion and chaos among the agents, that bump against each other in their attempt to escape. This causes the groups to become stuck sometimes, and at exits creates big **bottleneck effects**  as all the agents are trying to get through a tight space at the same time;
+  
+  When too many agents attempted to get to the stage at the same time, they would push forward into walls, resulting in circular motion like in "cattle crush" phenomena, and jittering from the agents under most pressure, describing a situation of a “crowd crush”. These were easily fixed by adjusting agents' separation weights and speeds. More separation weight, more stability.
+  
+  However, when agents were allowed too much separation weight, they often stopped in their tracks to follow the crowd, even when their objectives were not the same. For that it was necessary to test and achieve balanced weight.
+
+* **Crowd Clumping** -
+Randomly choosing points across the entire concert area gave too even results, so we implemented triangular randoms, to favor center change points. This produced much more realistic audience formations but it also increased the likelihood of circular crowd movements, since more agents were moving toward the exact same point at the same time.
+
+* **Explosions and Fire** -
+  Fire spread would be extremely sensitive to parameter tuning, even a small change in explosion rate or propagation chances could rapidly escalate into uncontrollable disasters or no fire at all.
+
+  This happened because of all the stacked randoms on top of eachother, particularly update batching, if updating too little fires at a time, some fires could never even get a chance to try to spread. The probability had become degraded from the choices before it and therefore became imprecise.
 
 ---
 
 ## Conclusion
 
-Nesta secção devem relacionar o que foi apresentado na introdução, nomeadamente o problema que se propuseram a resolver, com os resultados que obtiveram, e como o vosso projeto e a vossa abordagem se relaciona no panorama
-geral da pesquisa que efetuaram sobre simulação de pânico em multidões.
-• Uma pessoa que leia a introdução e conclusão do vosso relatório deve ficar
-com uma boa ideia daquilo que fizeram e descobriram, embora sem saber os
-detalhes.
+This project aimed to simulate large-scale crowd behavior during an event, focusing on independent movement, actions driven by needs, and panic reaction to hazards, our approach prioritized scalability, determinism, and emergent behavior, following practices proposed in literature such as Helbing et al. (2007) and Fachada et al. (2015). By integrating DotRecast navigation and a modular finite state machine architecture, we achieved these goals with efficient crowd simulation capable of handling up to 2500 agents.
+
+The use of seeded randomness and triangular distributions reproduced more realistic behaviors, and optimizations were essential to maintain performance under heavy load. The results demonstrate that simple agent logic, combined with efficient navigation and environment design, can successfully recreate complex crowd behaviors observed in real-world panic situations.
 
 ---
 
 ## References
-
-* [Crowds in front of bottlenecks at entrances from the perspective of physics and social psychology](https://royalsocietypublishing.org/doi/10.1098/rsif.2019.0871)
 
 ### Videos
 
@@ -630,6 +650,7 @@ detalhes.
 * [UniRecast GitHub Repository](https://github.com/ikpil/UniRecast)
 * [Reflection Probe Atlas Overhead Discussion (Unity Forum)](https://discussions.unity.com/t/update-reflection-probe-atlas-causing-large-overhead-in-empty-scene/1527603/5)
 * [Unity Simple FSMs Project - Moodle, Cadeira de IA](https://moodle.ensinolusofona.pt/mod/resource/view.php?id=439813)
+* [Crowds in front of bottlenecks at entrances from the perspective of physics and social psychology](https://royalsocietypublishing.org/doi/10.1098/rsif.2019.0871)
 
 ### Libraries
 
