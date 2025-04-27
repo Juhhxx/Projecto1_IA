@@ -435,7 +435,7 @@ classDiagram
   RandomManager --> ISeedRandom
   RandomManager --> System.Random
   ISeedRandom --> System.Random
-  SeedRandom --|> ISeedRandom
+  SeedRandom ..|> ISeedRandom
   SeedRandom --> RandomManager
   RcSeedRandom --> RandomManager
   RcSeedRandom ..|> ISeedRandom
@@ -505,19 +505,19 @@ classDiagram
   class TransitionWaitForSeconds
 
 
-  TransitionCheckAgentStat --|> TransitionAbstract
+  TransitionCheckAgentStat ..|> TransitionAbstract
   TransitionCheckAgentStat --> GameObject
   TransitionCheckAgentStat --> AgentStatsController
   TransitionCheckAgentStat --> AgentStat
 
-  TransitionCheckExplosionRadius --|> TransitionAbstract
+  TransitionCheckExplosionRadius ..|> TransitionAbstract
   TransitionCheckExplosionRadius --> GameObject
   TransitionCheckExplosionRadius --> AgentStatsController
 
-  TransitionKeyPressed --|> TransitionAbstract
+  TransitionKeyPressed ..|> TransitionAbstract
   TransitionKeyPressed --> KeyCode
 
-  TransitionWaitForSeconds --|> TransitionAbstract
+  TransitionWaitForSeconds ..|> TransitionAbstract
   TransitionWaitForSeconds --> GameObject
 
 
