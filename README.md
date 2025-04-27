@@ -11,6 +11,11 @@
 ## Tasks
 
 * Júlia Costa
+  * Create Base System for State Machines,
+  * Create Unity Integration for State Machine System using Scriptable Objects.
+  * Create Script for Managing Agent Stats,
+  * Setup State Machine for Agents.
+
 * Mariana Martins
 
 ---
@@ -20,9 +25,9 @@
 • Pequena descrição sobre o problema e a forma como o resolveram. Deve oferecer ao leitor informação suficiente para entender e contextualizar o projeto,
 bem como quais foram os objetivos e resultados alcançados.
 
-This project aims to simulate crowd behavior at large scale events with different settings like concert stages, food courts and green spaces. Here agents move around independently according to their needs (watching shows, resting or eating), and react to hazards that incite panic like explosions and fires, where the agents must try to escape through the exits of the event.
+This project aims to simulate crowd behaviour at large scale events with different settings like concert stages, food courts and green spaces. Here agents move around independently according to their needs (watching shows, resting or eating), and react to hazards that incite panic like explosions and fires, where the agents must try to escape through the exits of the event.
 
-To achieve an efficient simulation with support for a high number of agents simultaneously, we chose to use **DotRecast**, a library that allows the generation of navigation meshes (navmeshes) and path calculation based on the A* algorithm, and should optimize pathfinding without relying on too detailed physics. We are also implementing a **finite state machine (FSM)** to control each agent's high-level decisions with the same intent, as the required states, wander/idle, watching concert, hungry, eating, tired, resting and panicked are few, and therefore a good number for FSM implementation.
+To achieve an efficient simulation with support for a high number of agents simultaneously, we chose to use **DotRecast**, a library that allows the generation of navigation meshes (navmeshes) and path calculation based on the A* algorithm, and should optimize pathfinding without relying on too detailed physics. We also implemented a **finite state machine (FSM)** to control each agent's high-level decisions with the same intent, as the required states, watching concert, eating, resting and panicked are few, and therefore a good number for FSM implementation.
 
 • why choose 2dvs3dvs2.5d here
 
@@ -67,6 +72,14 @@ UML simples ou fluxogramas de algum algoritmo mais complexo que tenham
 desenvolvido).
 • Esta secção deve ter detalhe suficiente para que outra pessoa consiga replicar
 o comportamento da vossa simulação sem olhar para o respetivo código
+
+### Agent FSMs
+
+For controlling the Agents behaviours, as referenced before, we chose to use a Finite State Machine System. We used the [examples available on moodle](https://moodle.ensinolusofona.pt/mod/resource/view.php?id=439813) as a base, and built uppon it for creating a system that would allow us to modularly create our State Machines via the Unity Inspector. This system allowed us to effortlessly mess and play with our Agents until we found thair behaviour to be adequate.
+
+We wounded up using the following State Machine model for all of our Agents:
+
+![Diagram of the Agents State Machine](Assets/Sprites/StateMachineIA.png)
 
 ### Architecture
 
