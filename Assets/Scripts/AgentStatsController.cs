@@ -101,10 +101,13 @@ namespace Scripts
             _agentID = _crowd.AddAgent(transform.position, false);
             _crowd.SwitchToNormal(_agentID);
             
-            ChooseRandomState();
-
             if ( _runner.StateMachine != null )
                 _runner.StateMachine.ResetStateMachine();
+
+            ChangeColor(_normalColor);
+
+            ChooseRandomState();
+
             _runner.enabled = true;
         }
 
