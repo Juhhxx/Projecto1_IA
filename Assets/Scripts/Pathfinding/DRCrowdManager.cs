@@ -223,9 +223,11 @@ namespace Scripts.Pathfinding
         /// <summary>
         /// Removes an agent from the crowd simulation.
         /// </summary>
-        public void RemoveAgent(DtCrowdAgent agentId)
+        public void RemoveAgent(AgentStatsController agentId)
         {
-            _crowd.RemoveAgent(agentId);
+            _activeAgents.Remove(agentId);
+            _inactiveAgents.Add(agentId);
+            _crowd.RemoveAgent(agentId.ID);
         }
 
         /// <summary>

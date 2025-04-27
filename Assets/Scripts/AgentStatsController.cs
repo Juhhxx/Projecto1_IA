@@ -168,7 +168,7 @@ namespace Scripts
         /// </summary>
         public void Deactivate()
         {
-            _crowd.RemoveAgent(_agentID);
+            _crowd.RemoveAgent(this);
             _agentID = null;
             
             gameObject.SetActive(false);
