@@ -58,7 +58,7 @@
 • Pequena descrição sobre o problema e a forma como o resolveram. Deve oferecer ao leitor informação suficiente para entender e contextualizar o projeto,
 bem como quais foram os objetivos e resultados alcançados.
 
-This project aims to simulate crowd behaviour at large scale events with different settings like concert `Stage`s, food courts and green spaces. Here agents move around independently according to their needs (watching shows, resting or eating), and react to hazards that incite panic like explosions and `Fire`s, where the agents must try to escape through the `Exit`s of the event.
+This project aims to simulate crowd behaviour at large scale events with different settings like concert `Stage`s, food courts and green spaces. Here agents move around independently according to their needs (watching shows, resting or eating), and react to hazards that incite panic like explosions and `Fires`, where the agents must try to escape through the `Exit`s of the event.
 
 To achieve an efficient simulation with support for a high number of agents simultaneously, we chose to use **DotRecast**, a library that allows the generation of navigation meshes (navmeshes) and path calculation based on the A* algorithm, and should optimize pathfinding without relying on too detailed physics. We also implemented a **finite state machine (FSM)** to control each agent's high-level decisions with the same intent, as the required states, watching concert, eating, resting and panicked are few, and therefore a good number for FSM implementation.
 
@@ -129,9 +129,9 @@ We wounded up using the following State Machine model for all of our Agents:
 
 We implemented a `Fire` and Explosion System to simulate sudden hazards and their spread, where `ExplosionManager` class orchestrates random explosion events on the navmesh by periodically selecting a random navmesh tile, triggering an explosion effect, and notifying the crowd manager to induce panic and paralyzation in surrounding agents.
 
-The explosion finds affected polygons (within configurable death/fear/panic radiuses) and ignites `Fire`s on those areas based on a set probability parametrized in the inspector and animates a visual explosion effect​.
+The explosion finds affected polygons (within configurable death/fear/panic radiuses) and ignites `Fires` on those areas based on a set probability parametrized in the inspector and animates a visual explosion effect​.
 
-For performance, active `Fire`s are updated in batches, and each `Fire` object tracks its own lifetime and behavior, and it'a navmesh polygon. Once activated, it increments its lifetime every frame and deactivates itself after a set duration, simulating extinguishing, and at each update, a `Fire` has a small chance to spread to one of its neighboring polygons by calling back to the `ExplosionManager`. This is what `Fire` update batching controls, so lifetime is actually also dependant on number of active `Fire`s, this works well, almost as if the `Fire` is consuming oxygen and therefore not spreading as much with more `Fire`.
+For performance, active `Fires` are updated in batches, and each `Fire` object tracks its own lifetime and behavior, and it'a navmesh polygon. Once activated, it increments its lifetime every frame and deactivates itself after a set duration, simulating extinguishing, and at each update, a `Fire` has a small chance to spread to one of its neighboring polygons by calling back to the `ExplosionManager`. This is what `Fire` update batching controls, so lifetime is actually also dependant on number of active `Fires`, this works well, almost as if the `Fire` is consuming oxygen and therefore not spreading as much with more `Fire`.
 
 Agents that enter a tile with active `Fire` are immediately removed from the simulation, and the `AgentStatsController` of each agent checks for this condition each frame, and deactivates the agent if it finds its current polygon is on `Fire`​.
 
@@ -196,7 +196,7 @@ It handles adding and removing agents to/from the navmesh, setting agent movemen
 
 #### `ExplosionManager`
 
-Manages global hazard events and coordinates with the crowd system​. It pre-bakes a pool of `Fire` objects for each navmesh polygon, and at runtime it randomly triggers explosions with configurable frequency. When an explosion occurs, it finds all polygons within the death radius and may set them on `Fire` based on a probability​. It also notifies the crowd manager (`DRCrowdManager`) to induce panic within the explosion’s death/fear/panic radii. Active `Fire`s are updated in batches each frame for efficiency.
+Manages global hazard events and coordinates with the crowd system​. It pre-bakes a pool of `Fire` objects for each navmesh polygon, and at runtime it randomly triggers explosions with configurable frequency. When an explosion occurs, it finds all polygons within the death radius and may set them on `Fire` based on a probability​. It also notifies the crowd manager (`DRCrowdManager`) to induce panic within the explosion’s death/fear/panic radii. Active `Fires` are updated in batches each frame for efficiency.
 
 ##### `Fire`
 
@@ -280,7 +280,7 @@ If the agent is outside the structure’s radius or structure has not yet been s
 
 #### `DtQueryFilter`
 
-Base class for pathfinding cost filters​. It holds a reference to the `ExplosionManager` to query active `Fire`s. By default, it returns the squared distance between points as cost and only passes polygons that are of ground type​
+Base class for pathfinding cost filters​. It holds a reference to the `ExplosionManager` to query active `Fires`. By default, it returns the squared distance between points as cost and only passes polygons that are of ground type​
 
 ##### `DtQueryRegularFilter`
 
@@ -288,7 +288,7 @@ Specialized filter for “normal” (non-panicked) agents​. It initializes all
 
 ##### `DtQueryPanicFilter`
 
-Panic-mode filter for panicked agents​. It overrides GetCost to heavily penalize hazards: if the agent’s current polygon has active `Fire`, it multiplies the cost by 10, it also adds a penalty based on proximity to the most recent explosion center (higher penalty the closer it is)​. This makes paths near `Fire`s or the explosion much less attractive for pathfinding.
+Panic-mode filter for panicked agents​. It overrides GetCost to heavily penalize hazards: if the agent’s current polygon has active `Fire`, it multiplies the cost by 10, it also adds a penalty based on proximity to the most recent explosion center (higher penalty the closer it is)​. This makes paths near `Fires` or the explosion much less attractive for pathfinding.
 
 ##### `DtQueryRegularHeuristic`
 
@@ -296,37 +296,66 @@ Regular heuristic returning the squared Euclidean distance from a node to the go
 
 ##### `DtQueryPanicHeuristic`
 
-Panic-mode heuristic that encourages moving away from `Fire`​. It computes a cost by subtracting the squared distance from a known `Fire` position (if any) from the distance to the goal, thus biasing paths that increase distance from `Fire`s.
+Panic-mode heuristic that encourages moving away from `Fire`​. It computes a cost by subtracting the squared distance from a known `Fire` position (if any) from the distance to the goal, thus biasing paths that increase distance from `Fires`.
 
 #### UML Diagram
 
 ```mermaid
 classDiagram
-    direction TB
-    class Monobehavior
+  class Manager
+  class RandomManager
+  class DRcHandle
+  class DRCrowdManager
 
-    class `Fire`
-    class `ExplosionManager`
+  Manager <|-- RandomManager
+  Manager <|-- DRcHandle
+  Manager <|-- DRCrowdManager
 
-    `ExplosionManager` *-- `Fire` : manages
+  class Structure
+  class Exit
+  class FoodArea
+  class GreenSpace
+  class Stage
 
-    class `DtQueryFilter`
+  Structure <|-- Exit
+  Structure <|-- FoodArea
+  Structure <|-- GreenSpace
+  Structure <|-- Stage
 
-    class `DtQueryRegularFilter`
-    `DtQueryRegularFilter` --|> `DtQueryFilter`
+  class ExplosionManager
+  class Fire
 
-    class `DtQueryPanicFilter`
-    `DtQueryPanicFilter` --|> `DtQueryFilter`
+  ExplosionManager *-- Fire
 
-    class IDtQueryHeuristic
+  <<interface>> ISeedRandom
+  <<interface>> IRcRand
+  class SeedRandom
+  class RcSeedRandom
 
-    class `DtQueryRegularHeuristic`
-    `DtQueryRegularHeuristic` --|> IDtQueryHeuristic
+  SeedRandom ..|> ISeedRandom
+  RcSeedRandom ..|> ISeedRandom
+  RcSeedRandom ..|> IRcRand
 
-    class `DtQueryPanicHeuristic`
-    `DtQueryPanicHeuristic` --|> IDtQueryHeuristic
+  class AgentStatsController
+  class StateMachineRunner
+  class StateMachine
+  class StateAbstract
+  class TransitionAbstract
+  class StateTransition
+  class Transition
 
-    class `AgentStatsController`
+  DRCrowdManager --> AgentStatsController
+  DRCrowdManager --> DRcHandle
+  DRCrowdManager --> ExplosionManager
+
+  AgentStatsController --> DRCrowdManager
+  AgentStatsController --> StateMachineRunner
+
+  StateMachineRunner --> StateMachine
+  StateMachine *-- StateAbstract
+  StateMachine *-- TransitionAbstract
+  StateAbstract --> StateTransition
+  TransitionAbstract --> Transition
 ```
 
 ---
