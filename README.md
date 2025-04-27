@@ -469,7 +469,7 @@ classDiagram
   class StateMachine
   class Transition
   class StateAbstract
-  <<abstract>>> StateAbstract
+  <<abstract>> StateAbstract
   class StateMachineCreator
   class TransitionAbstract
 
