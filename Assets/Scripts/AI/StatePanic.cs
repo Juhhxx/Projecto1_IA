@@ -18,6 +18,7 @@ namespace Scripts.AI
         {
             _exit = Exit.FindNearest(_agent.ID.npos);
             _agent.Crowd.SetTarget(_agent.ID, _exit.Ref, _exit.Position);
+            _agent.ChangeColor(_agent.PanicColor);
 
             Debug.Log($"Start State {Name}");
         }

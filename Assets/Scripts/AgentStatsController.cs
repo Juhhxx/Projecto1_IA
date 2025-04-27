@@ -24,12 +24,20 @@ namespace Scripts
         [Space(5f)]
         [SerializeField] private float _maxHunger;
         [SerializeField] private float _hungerDepleationRate;
-        [SerializeField] private Color _hungryColor;
         [SerializeField] private float _maxEnergy;
         [SerializeField] private float _energyDepleationRate;
-        [SerializeField] private Color _tiredColor;
         [SerializeField] private float _depleationSpeed;
         [SerializeField] private AgentStat _agentStat;
+
+        [SerializeField] private Color _hungryColor;
+        [SerializeField] private Color _tiredColor;
+        [SerializeField] private Color _paralyzedColor;
+        [SerializeField] private Color _panicColor;
+        public Color HungryColor => _hungryColor;
+        public Color TiredColor => _tiredColor;
+        public Color ParalyzedColor => _paralyzedColor;
+        public Color PanicColor => _panicColor;
+
 
         [SerializeField] private float _acceptedDist = 2f;
         public float AcceptedDist => _acceptedDist;
@@ -46,8 +54,6 @@ namespace Scripts
         private float _hungerLevel;
         private float _energyLevel;
         public AgentStat AgentStat => _agentStat;
-        public Color HungryColor => _hungryColor;
-        public Color TiredColor => _tiredColor;
         private Coroutine _changeHunger;
         private Coroutine _changeEnergy;
         private Coroutine _updateStats;

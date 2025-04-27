@@ -12,7 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ad3658913798e804d8fef6141f7dae50, type: 3}
   m_Name: StateMachine
   m_EditorClassIdentifier: 
-  InitialState: {fileID: 11400000, guid: ee5ad1d254d733543b1e67819d7bc8bc, type: 2}
   StateTransitions:
   - State: {fileID: 11400000, guid: ee5ad1d254d733543b1e67819d7bc8bc, type: 2}
     Transitions:

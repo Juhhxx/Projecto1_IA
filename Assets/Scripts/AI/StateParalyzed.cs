@@ -14,6 +14,7 @@ namespace Scripts.AI
 
         protected override void EntryAction()
         {
+            _agent.ChangeColor(_agent.ParalyzedColor);
             Debug.Log($"Start State {Name}");
         }
         protected override void StateAction()
