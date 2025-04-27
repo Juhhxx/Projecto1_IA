@@ -41,7 +41,7 @@ namespace Scripts.Pathfinding.DotRecast
             if ( _explosion.PolyHasFire(curRef) )
             {
                 Debug.Log("Has fire!!! value bf " + value +" now: " + value *10);
-                Debug.Log("Also explosion range expl: " + expl);
+                Debug.Log("Also explosion range expl: v" + value +" e: " + expl);
                 value *= 10;
             }
             
