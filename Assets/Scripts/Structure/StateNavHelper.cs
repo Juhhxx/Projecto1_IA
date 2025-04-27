@@ -23,7 +23,7 @@ namespace Scripts.Structure
                 if (currentStructure == null)
                     return false;
 
-                agent.Crowd.SetTarget(agent.ID, agent.NextRef.Ref, agent.NextRef.Pos);
+                agent.Crowd.SetTarget(agent.ID, currentStructure.Ref, currentStructure.Position);
                 return false;
             }
 
@@ -33,12 +33,18 @@ namespace Scripts.Structure
                 // If currently targeting the center (structure.Ref) or wrong target, pick best spot
                 if ( agent.NextRef.Ref != agent.ID.targetRef )
                 {
-                    agent.NextRef = Structure<T>.GetBestSpot(agent.ID.npos, currentStructure, out Structure<T> maybeNewStructure);
+                    (RcVec3f, long) nextRef = Structure<T>.GetBestSpot(agent.ID.npos, currentStructure, out Structure<T> maybeNewStructure);
 
-                    if (maybeNewStructure != currentStructure)
+                    if ( maybeNewStructure != null && maybeNewStructure != currentStructure )
+                    {
                         currentStructure = maybeNewStructure;
-
-                    agent.Crowd.SetTarget(agent.ID, agent.NextRef.Ref, agent.NextRef.Pos);
+                        agent.Crowd.SetTarget(agent.ID, currentStructure.Ref, currentStructure.Position);
+                    }
+                    else
+                    {
+                        agent.NextRef = nextRef;
+                        agent.Crowd.SetTarget(agent.ID, agent.NextRef.Ref, agent.NextRef.Pos);
+                    }
                 }
                 // If close enough to the chosen good spot
                 else if ( RcVec3f.Distance(agent.ID.npos, agent.NextRef.Pos) <= agent.AcceptedDist )
