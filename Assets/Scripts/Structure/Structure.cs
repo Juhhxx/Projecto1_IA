@@ -16,7 +16,7 @@ namespace Scripts.Structure
     {
         [SerializeField] private float _radius = 10f;
         [SerializeField] private Transform _pivot;
-        [SerializeField] private int _tooManyAgents = 5;
+        [SerializeField] protected int _tooManyAgents = 5;
         [SerializeField] private int _tries = 3;
 
         // one structure list per subclass
@@ -129,8 +129,6 @@ namespace Scripts.Structure
             (RcVec3f, long) next =
                 structure._places[ structure._rand.Triangular(0, structure._places.Length) ];
 
-            Debug.DrawLine(DRcHandle.ToUnityVec3(pos), DRcHandle.ToUnityVec3(next.Item1));
-
             for ( int i = 0; i < structure._tries ; i++ )
             {
                 if ( structure.IsGoodSpot(next.Item2) ) // return if found good spot
@@ -141,7 +139,7 @@ namespace Scripts.Structure
             // If no good spot found, try finding a better structure
             newStruct = FindNearest(pos, structure);
 
-            return (structure.Position, structure.Ref);
+            return next;
         }
 
         /// <summary>

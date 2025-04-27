@@ -22,7 +22,7 @@ namespace Scripts.Structure
             Vector3 forward = transform.position + transform.forward * transform.localScale.z / 2f;
             Vector3 rightOffset = transform.right * transform.localScale.x / 2f;
 
-            forward.z -= 1.2f;
+            forward.z -= Mathf.Sign(forward.z) * 4f * _tooManyAgents;
 
             // start and end of the line to get points at. In world position.
             Vector3 edgeA = forward + rightOffset;
