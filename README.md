@@ -12,7 +12,7 @@
 
 * Júlia Costa
   * Create Base System for State Machines,
-  * Create Unity Integration for State Machine System using Scriptable Objects.
+  * Create Unity Integration for State Machine System using Scriptable Objects,
   * Create Script for Managing Agent Stats,
   * Setup State Machine for Agents.
 
@@ -33,7 +33,7 @@
 ### Sprites
 
   1. Agent: ![Agent Sprite](https://github.com/Juhhxx/LP2_4XGAME2/blob/main/Assets/Sprites/GrimReaperSprite.png)
-  2. Fire: ![Fire Sprite](https://github.com/Juhhxx/LP2_4XGAME2/blob/main/Assets/Sprites/MinerSprite.png)
+  2. `Fire`: ![`Fire` Sprite](https://github.com/Juhhxx/LP2_4XGAME2/blob/main/Assets/Sprites/MinerSprite.png)
 
 ### Explosion Ranges
 
@@ -45,8 +45,8 @@
 
   1. Food Area: 🟧 (Orange #FF6D00) Sphere
   2. Green Space: 🟩 (Green #32CD32) Sphere
-  3. Stage: 🟥 (Red #FF0000) Sphere
-  4. Exit: 🟪 (Purple #9E00FF)
+  3. `Stage`: 🟥 (Red #FF0000) Sphere
+  4. `Exit`: 🟪 (Purple #9E00FF)
   5. Path: ⬜ (Gray #808080)
   6. Less Desirable Path: ⬜⬛ (Dark Gray #404040)
   7. Blockage: ⬛ (Black #000000)
@@ -58,7 +58,7 @@
 • Pequena descrição sobre o problema e a forma como o resolveram. Deve oferecer ao leitor informação suficiente para entender e contextualizar o projeto,
 bem como quais foram os objetivos e resultados alcançados.
 
-This project aims to simulate crowd behaviour at large scale events with different settings like concert stages, food courts and green spaces. Here agents move around independently according to their needs (watching shows, resting or eating), and react to hazards that incite panic like explosions and fires, where the agents must try to escape through the exits of the event.
+This project aims to simulate crowd behaviour at large scale events with different settings like concert `Stage`s, food courts and green spaces. Here agents move around independently according to their needs (watching shows, resting or eating), and react to hazards that incite panic like explosions and `Fire`s, where the agents must try to escape through the `Exit`s of the event.
 
 To achieve an efficient simulation with support for a high number of agents simultaneously, we chose to use **DotRecast**, a library that allows the generation of navigation meshes (navmeshes) and path calculation based on the A* algorithm, and should optimize pathfinding without relying on too detailed physics. We also implemented a **finite state machine (FSM)** to control each agent's high-level decisions with the same intent, as the required states, watching concert, eating, resting and panicked are few, and therefore a good number for FSM implementation.
 
@@ -66,7 +66,7 @@ To achieve an efficient simulation with support for a high number of agents simu
 
 ### Crowd Panic Research
 
-According to Helbing et al. (2007), panic is triggered by sudden hazards, like the explosions and fire in this project, and spreads quickly as people replicate the fear driven actions of those around them. In learning this, and according to the project guidelines, panic would not be only spread through the immediate explosion range, but also through through a chain reaction propagated continuously by panicked agents.
+According to Helbing et al. (2007), panic is triggered by sudden hazards, like the explosions and `Fire` in this project, and spreads quickly as people replicate the fear driven actions of those around them. In learning this, and according to the project guidelines, panic would not be only spread through the immediate explosion range, but also through through a chain reaction propagated continuously by panicked agents.
 
 #### What things do people do when they panic?
 
@@ -78,14 +78,14 @@ In high-density crowds, panic can quickly become dangerous as individuals lose t
 
 Panic movement often leads to herding (when the crowd starts following the movements of one another), bottlenecks (when the crowd tries to pass through too narrow places all at once), and chaotic motion (unpredictable movement from conflicting intentions in the crowd).
 
-To reflect this, while the agents reach for their nearest exit they would:
+To reflect this, while the agents reach for their nearest `Exit` they would:
 
 * Have increased speed;
 * Not have path preferences (by removing weights);
 * Prefer to move away from the hazard;
 * Show flocking behaviors when near other panicked agents.
 
-The exits in crowd situations can influence evacuation scenarios as Wagner & Agrawal (2014) states, and we could also incorporate this by exploring different the numbers and poisonings of exits in the festival, which we can use to study bottlenecks crowd behavior.
+The `Exit`s in crowd situations can influence evacuation scenarios as Wagner & Agrawal (2014) states, and we could also incorporate this by exploring different the numbers and poisonings of `Exit`s in the festival, which we can use to study bottlenecks crowd behavior.
 
 #### Reproducibility
 
@@ -106,6 +106,17 @@ desenvolvido).
 • Esta secção deve ter detalhe suficiente para que outra pessoa consiga replicar
 o comportamento da vossa simulação sem olhar para o respetivo código
 
+### Seeded Random Determinism
+
+The project uses a seeded random system to help with reproducible behaviors. Every significant game object that needs randomness gets its own ``ISeedRandom`` instance (either a `SeedRandom` or ``RcSeedRandom``). Upon creation, which we make sure the order of in project settings execution order, the object registers with the ``RandomManager``, which then generates a unique seed based on the object’s hierarchy path combined with a global base seed.
+
+This means that on each run each object should produce the same sequence of “random” numbers and by isolating random streams per object (instead of one global random) when we can, even if objects initialize in different orders or new objects are added, the randomness remains consistent for each object’s behavior.
+
+The random generators support both:
+
+* **Uniform distribution**: For unpredictable outcomes.
+* **Triangular distribution**: Biases toward middle values when selecting structure spots, simulating more natural congregation patterns while still introducing variation.
+
 ### Agent FSMs
 
 For controlling the Agents behaviours, as referenced before, we chose to use a Finite State Machine System. We used the [examples available on moodle](https://moodle.ensinolusofona.pt/mod/resource/view.php?id=439813) as a base, and built uppon it for creating a system that would allow us to modularly create our State Machines via the Unity Inspector. This system allowed us to effortlessly mess and play with our Agents until we found thair behaviour to be adequate.
@@ -114,24 +125,208 @@ We wounded up using the following State Machine model for all of our Agents:
 
 ![Diagram of the Agents State Machine](Assets/Sprites/StateMachineIA.png)
 
+### `Fire` and Explosion System
+
+We implemented a `Fire` and Explosion System to simulate sudden hazards and their spread, where `ExplosionManager` class orchestrates random explosion events on the navmesh by periodically selecting a random navmesh tile, triggering an explosion effect, and notifying the crowd manager to induce panic and paralyzation in surrounding agents.
+
+The explosion finds affected polygons (within configurable death/fear/panic radiuses) and ignites `Fire`s on those areas based on a set probability parametrized in the inspector and animates a visual explosion effect​.
+
+For performance, active `Fire`s are updated in batches, and each `Fire` object tracks its own lifetime and behavior, and it'a navmesh polygon. Once activated, it increments its lifetime every frame and deactivates itself after a set duration, simulating extinguishing, and at each update, a `Fire` has a small chance to spread to one of its neighboring polygons by calling back to the `ExplosionManager`. This is what `Fire` update batching controls, so lifetime is actually also dependant on number of active `Fire`s, this works well, almost as if the `Fire` is consuming oxygen and therefore not spreading as much with more `Fire`.
+
+Agents that enter a tile with active `Fire` are immediately removed from the simulation, and the `AgentStatsController` of each agent checks for this condition each frame, and deactivates the agent if it finds its current polygon is on `Fire`​.
+
+Panic in agents also spreads beyond the immediate explosion if the agent is within a set range of a `Fire`.
+
+### Panic/Normal Navigation
+
+Navigation and pathfinding are handled using DotRecast’s navmesh with custom query filters and heuristics set specifically for the desired, normal vs panic behaviors.
+
+#### Normal Navigation
+
+`DtQueryRegularFilter` is the default filter for agents in normal state, it takes in consideration area costs, and computes movement cost as distance multiplied by the area weight​.
+
+Area costs are set manually each run from locations that have been baked had more weighted.
+
+The `DtQueryRegularHeuristic` simply uses the squared Euclidean distance to the goal as an admissible heuristic​
+
+#### Panic Navigation
+
+When agents are panicked, we switch to `DtQueryPanicFilter` which heavily penalizes all danger (`Fire` and explosions).
+
+If the current polygon has `Fire`, it multiplies the regular cost by 10.
+
+The `DtQueryPanicHeuristic` adjusts the heuristic by subtracting the distance from the last known explosion location.
+
+These behaviors cause panicked agents to prioritize safety and speed over usual path preferences as they move faster and choose longer but safer routes that lead away from hazards.
+
 ### Architecture
 
-#### Organizations and Algorithms
+#### `AgentStatsController`
 
-##### `Controller`
+Manages an agent’s movement, state, and stats. It integrates with the crowd manager (`DRCrowdManager`) by adding/removing the agent on activation/deactivation. Each frame it updates the it's transform and rotation from the crowd agent’s position and velocity by smoothing it out and checks for hazards, if the agent’s current polygon has active `Fire`, it immediately deactivates the agent​.
 
-* Loads terrain data into `Tile` objects and places them in dictionaries, to then copy and create tiles in the grid from.
+Handles internal stats  and state transitions and randomly initializes a starting state and then runs coroutines to deplete or restore hunger and energy over time. When hunger or energy cross the limits, it updates the agent’s AgentStat, which the FSM uses to change behavior.
 
-##### `Controller`
+#### `Manager`
 
-* Loads terrain data into `Tile` objects and places them in dictionaries, to then copy and create tiles in the grid from.
+An abstract MonoBehaviour base class for all manager components in the project that require a controlled initialization and update order. It declares abstract ordered methods so instead of relying on Unity’s non-deterministic script execution order, each manager’s setup is invoked explicitly in a known sequence.
 
-### UML Diagram
+#### `DRcHandle`
+
+The DotRecast Handle is a central navigation manager (inherits Manager) responsible for loading and managing the NavMesh and coordinating other managers’ initialization.
+
+On bake, the DtNavMesh data is stored, and a DtNavMeshQuery is created for pathfinding queries.
+When loading the bake, it looks for any defined convex volume areas in the scene and marks the navmesh polys inside those volumes with a different area type for custom behavior.
+
+`DRcHandle` has an array of all Manager instances and is responsible for invoking all manager's Ordered methods.
+
+It also provides static methods for all other scripts to help in the interpretation of its navmesh with dotrecast's system.
+
+#### `DRCrowdManager`
+
+The `DRCrowdManager` is the main agent manager (inherits Manager) that handles crowd simulation on the DotRecast navmesh, connecting physical crowd simulation with agent behaviors like panic reactions for transitions without breaking pathfinding.
+
+On AwakeOrdered, it initializes a DtCrowd system using the baked navmesh and configures the agent parameters for normal, panic and paralyzed behaviors.
+
+On Bake, pre-creates a pool of agent prefabs that are kept inactive until UpdateOrdered, where it activates agents if there are available `Exit` spots and adds them to the simulation. Spawns are limited to one per frame to simulate natural entrance pacing.
+
+Each frame, it also updates the DotRecast crowd simulation and refreshes how many agents occupy each polygon (used by structures to decide if a spot is available).
+
+It handles adding and removing agents to/from the navmesh, setting agent movement targets and snapping positions to the nearest navmesh polygon, and notifying agents when they are caught inside an explosion radius, as well as agents spreading panic by proximity if they detect nearby `Fire` or paralyzed agents.
+
+#### `ExplosionManager`
+
+Manages global hazard events and coordinates with the crowd system​. It pre-bakes a pool of `Fire` objects for each navmesh polygon, and at runtime it randomly triggers explosions with configurable frequency. When an explosion occurs, it finds all polygons within the death radius and may set them on `Fire` based on a probability​. It also notifies the crowd manager (`DRCrowdManager`) to induce panic within the explosion’s death/fear/panic radii. Active `Fire`s are updated in batches each frame for efficiency.
+
+##### `Fire`
+
+Represents a `Fire` on a navmesh polygon. On each ordered update, it increments its lifetime and deactivates the GameObject after _duration seconds​. Each frame it has a small chance (set by_`Fire`Propagation) to ignite one of its neighboring polygon tiles via the `ExplosionManager` (spreading the `Fire`).
+
+#### `RandomManager`
+
+A singleton Manager responsible for coordinating all seeded random streams. It holds a list of all `ISeedRandom` instances (e.g. from SeedRandom and `RcSeedRandom`) and assigns each a unique deterministic seed based on a global BaseSeed (default 12345) combined with the GameObject’s hierarchy path. This ensures reproducible random behavior across the project. It exposes a RegisterStream(`ISeedRandom`) method that generates the unique ID and returns a new System.Random instance seeded with BaseSeed ^ ID. All random-generating objects use this to initialize their internal Random source.
+
+##### `ISeedRandom`
+
+Defines a generic interface for seeded random number generators tied to specific GameObjects. It provides methods for obtaining random integers/floats and triangular-distributed values, ensuring each generator has an Owner object and a unique ID for seeding.
+
+##### SeedRandom
+
+A general-purpose implementation of `ISeedRandom`. Each instance is associated with a GameObject and registers itself with the `RandomManager` to obtain a unique seed. It provides uniform random ranges (Range(int, int) and Range(float, float)) and triangular-distributed randoms (favoring mid-range values) for more natural variation.
+
+##### `RcSeedRandom`
+
+A specialized random stream that implements both `ISeedRandom` and DotRecast’s IRcRand interface. It is used for randomization within the DotRecast navigation system. Like SeedRandom, it registers with the `RandomManager` for a deterministic seed. It provides methods (Next(), NextDouble(), NextInt32(), etc.) needed by DotRecast, in addition to range and triangular distributions.
+
+#### `Structure<T>`
+
+An abstract generic base class for all interactive areas in the simulation that maintains a static registry of all instances of type T (all `Exit`s, all food areas), and defines common behaviors:
+
+  1. A defining the zone of influence (for detecting when an agent “enters” the area).
+
+  2. An array of points within the structure where agents can go, each stored as a world-space position with its navmesh polygon reference.
+
+  3. An initializer (called through AwakeOrdered) that seeds a local random generator for the structure, finds the navmesh position of a pivot point as the structure’s center, and calls the subclass’s implementation of SetUpPoints() to populate the array of points.
+
+FindNearest(pos) finds the closest structure of that type to a position
+
+EnteredArea(pos) checks if a point is within the structure’s radius
+
+IsGoodSpot(polyRef) checks if a given navmesh polygon is below the set agent capacity for a structure's point.
+
+GetBestSpot(currentPos, structure, out newStruct) picks an optimal spot within a structure. It uses the structure’s seeded random to select one of it's points (with a triangular distribution bias toward middle indices) and checks if that spot is free. It will try a few times to find a free spot, but if none are available, it finds a new structure of the same type nearest to the agent and returns that, redirecting the agent to a less crowded structure. The chosen spot (or a spot in a new structure) is returned as a tuple of navmesh position and reference.
+
+##### `Exit`
+
+A concrete structure representing an `Exit` area that inherits Structure<`Exit`>.
+
+An `Exit` contains one or more specific `Exit` points, and its SetUpPoints() iterates through these transforms to project each onto the navmesh. It uses `DRcHandle`.FindNearest() to get the nearest navmesh polygon for each `Exit` Transform and stores those points in the structures point array.
+
+These methods are only used for agent object pooling:
+GetRandomGood`Exit`(randomValue, out pos) is a static helper that uses a random integer to pick a random `Exit` instance from the registered list and then a random point within it.
+Any`Exit`Unoccupied() is also static method that scans all `Exit` points across all `Exit` instances to determine if at least one `Exit` spot has capacity, and is used to decide if a new agent can be spawned.
+
+##### `FoodArea`
+
+A concrete structure representing a food area that inherits Structure<`FoodArea`>.
+
+A `FoodArea` contains one or more specific table points, and its SetUpPoints() iterates through these transforms to project each onto the navmesh. It uses `DRcHandle`.FindNearest() to get the nearest navmesh polygon for each `Exit` Transform and stores those points in the structures point array.
+
+##### `GreenSpace`
+
+A concrete structure representing a green area that inherits Structure<`GreenSpace`>.
+
+A `GreenSpace` uses the object’s scaled size and a defined spacing to lay out a grid of candidate points across the area.
+For each grid intersection, it calls `DRcHandle`.FindNearest to snap that point to the navmesh, and collects it into points if it's valid.
+
+##### `Stage`
+
+A concrete structure representing a `Stage` area that inherits Structure<`Stage`>.
+
+A `Stage` computes the front center of the `Stage` based on the object’s forward direction and scale, determines the end points of the `Stage` front (edges), and then interpolates a series of points between those edges at a given spacing.
+For each interpolated point, it calls `DRcHandle`.FindNearest to snap that point to the navmesh, and collects it into points if it's valid.
+
+##### `StateNavHelper`
+
+A static utility class to assist with agent navigation state logic, especially for moving agents into structures. It provides a generic method FindSpot<T> that contains the logic that an agent’s finite state machine would normally use to reach a spot:
+
+  1. If the agent doesn’t yet have a target structure, it finds the nearest one of type T and sets that as the target (directing the agent’s navigation toward the structure’s center).
+
+  2. If the agent is within the structure’s area, it checks if the agent has reached or is targeting a specific spot. If not, it uses GetBestSpot to obtain an optimal spot and then sets the agent’s navigation target to that spot. Though if GetBestSpot suggests a different structure, it updates the agent’s currentStructure and redirects the agent to the new structure’s center.
+
+  3. If the agent has a target spot and is close enough to it, FindSpot returns that the agent has successfully arrived at a spot and the state machine can consider the task complete.
+  
+If the agent is outside the structure’s radius or structure has not yet been set, it makes sure the agent’s next target is the a structure’s position to guide them inside.
+
+#### `DtQueryFilter`
+
+Base class for pathfinding cost filters​. It holds a reference to the `ExplosionManager` to query active `Fire`s. By default, it returns the squared distance between points as cost and only passes polygons that are of ground type​
+
+##### `DtQueryRegularFilter`
+
+Specialized filter for “normal” (non-panicked) agents​. It initializes all area types with increasing costs and computes movement cost as the distance between points multiplied by the area’s weight​. (Future modifications could change these weights to prefer or avoid certain areas.)
+
+##### `DtQueryPanicFilter`
+
+Panic-mode filter for panicked agents​. It overrides GetCost to heavily penalize hazards: if the agent’s current polygon has active `Fire`, it multiplies the cost by 10, it also adds a penalty based on proximity to the most recent explosion center (higher penalty the closer it is)​. This makes paths near `Fire`s or the explosion much less attractive for pathfinding.
+
+##### `DtQueryRegularHeuristic`
+
+Regular heuristic returning the squared Euclidean distance from a node to the goal​. Used in normal pathfinding as an admissible A* heuristic.
+
+##### `DtQueryPanicHeuristic`
+
+Panic-mode heuristic that encourages moving away from `Fire`​. It computes a cost by subtracting the squared distance from a known `Fire` position (if any) from the distance to the goal, thus biasing paths that increase distance from `Fire`s.
+
+#### UML Diagram
 
 ```mermaid
 classDiagram
     direction TB
-    class Viewer
+    class Monobehavior
+
+    class `Fire`
+    class `ExplosionManager`
+
+    `ExplosionManager` *-- `Fire` : manages
+
+    class `DtQueryFilter`
+
+    class `DtQueryRegularFilter`
+    `DtQueryRegularFilter` --|> `DtQueryFilter`
+
+    class `DtQueryPanicFilter`
+    `DtQueryPanicFilter` --|> `DtQueryFilter`
+
+    class IDtQueryHeuristic
+
+    class `DtQueryRegularHeuristic`
+    `DtQueryRegularHeuristic` --|> IDtQueryHeuristic
+
+    class `DtQueryPanicHeuristic`
+    `DtQueryPanicHeuristic` --|> IDtQueryHeuristic
+
+    class `AgentStatsController`
 ```
 
 ---
