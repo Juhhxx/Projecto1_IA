@@ -24,8 +24,21 @@ namespace Scripts.AI
         }
         protected override void StateAction()
         {
-            if ( StateNavHelper.FindSpot(_agent, ref _exit) )
-                _agent.Deactivate();
+            // If inside structure area
+            if (_exit.EnteredArea(_agent.ID.npos))
+            {
+                // If currently targeting the center (structure.Ref) or wrong target, pick best spot
+                if ( _agent.NextRef.Ref != _agent.ID.targetRef )
+                {
+                    (RcVec3f, long) nextRef = Structure<Exit>.GetBestSpot(_agent.ID.npos, _exit, out _);
+
+                    _agent.NextRef = nextRef;
+                    _agent.Crowd.SetTarget(_agent.ID, _agent.NextRef.Ref, _agent.NextRef.Pos);
+                }
+                // If close enough to the chosen good spot
+                else if ( RcVec3f.Distance(_agent.ID.npos, _agent.NextRef.Pos) <= _agent.AcceptedDist )
+                    _agent.Deactivate();
+            }
         }
         protected override void ExitAction()
         {
