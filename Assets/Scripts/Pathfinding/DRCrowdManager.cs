@@ -29,8 +29,8 @@ namespace Scripts.Pathfinding
         // for object pooling
         [SerializeField] private GameObject _agentPrefab;
         [SerializeField] private AgentStatsController[] _agents;
-        private IList<AgentStatsController> _activeAgents;
-        private IList<AgentStatsController> _inactiveAgents;
+        private HashSet<AgentStatsController> _activeAgents;
+        private HashSet<AgentStatsController> _inactiveAgents;
 
         public ISeedRandom Rand { get; private set; }
 
@@ -68,8 +68,8 @@ namespace Scripts.Pathfinding
         /// </summary>
         internal protected override void AwakeOrdered()
         {
-            _activeAgents = new List<AgentStatsController>();
-            _inactiveAgents = _agents.ToList();
+            _activeAgents = new HashSet<AgentStatsController>();
+            _inactiveAgents = _agents.ToHashSet();
             _polyAgentCounts = new Dictionary<long, int>(ExplosionManager.PolyNum);
 
             Rand = new SeedRandom(gameObject);
@@ -172,12 +172,26 @@ namespace Scripts.Pathfinding
 
             SetAgentCount();
 
-            int count = _activeAgents.Count;
-
-            for (int i = 0; i < _AgentsPerUpdateBatch && count > 0; i++)
+            if (_activeAgents.Count > 0)
             {
-                _activeAgents[_updateCursor % count].UpdateOrdered();
-                _updateCursor++;
+                int skip = _updateCursor % _activeAgents.Count;
+                int updated = 0;
+
+                foreach (AgentStatsController agent in _activeAgents)
+                {
+                    if (skip > 0)
+                    {
+                        skip--;
+                        continue;
+                    }
+
+                    agent.UpdateOrdered();
+                    updated++;
+                    _updateCursor++;
+
+                    if (updated >= _AgentsPerUpdateBatch)
+                        break;
+                }
             }
 
             if (Exit.AnyExitUnoccupied())
@@ -187,7 +201,7 @@ namespace Scripts.Pathfinding
                 {
                     agent.gameObject.SetActive(true);
                     agent.Activate();
-                    _inactiveAgents.RemoveAt(0);
+                    _inactiveAgents.Remove(agent);
                     _activeAgents.Add(agent);
                 }
             }
@@ -275,6 +289,8 @@ namespace Scripts.Pathfinding
 
             foreach (AgentStatsController agent in _activeAgents)
             {
+                if ( agent.ID == null ) continue;
+
                 float distSq =
                     (agent.ID.npos.X - center.X) * (agent.ID.npos.X - center.X) +
                     (agent.ID.npos.Z - center.Z) * (agent.ID.npos.Z - center.Z);
@@ -294,6 +310,7 @@ namespace Scripts.Pathfinding
         /// <param name="agent"></param>
         private void Paralyze(AgentStatsController agent)
         {
+            Debug.Log("Paralyze");
             agent.ExplosionRadius = 1;
 
             _crowd.UpdateAgentParameters(agent.ID, _paralyzedParams);
@@ -305,6 +322,7 @@ namespace Scripts.Pathfinding
         /// <param name="agent"></param>
         public void Panic(AgentStatsController agent) // TODO
         {
+            Debug.Log("Panic");
             // warn all in range agents to panic
             agent.ExplosionRadius = 2;
 

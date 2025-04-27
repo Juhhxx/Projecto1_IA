@@ -127,7 +127,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8260415460449031451}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bad496f9f0acfd94aa2be936df7f0a50, type: 3}
   m_Name: 
@@ -148,11 +148,12 @@ MonoBehaviour:
   _maxSpeed: 5
   _maxHunger: 100
   _hungerDepleationRate: 2
-  _hungryColor: {r: 0.8679245, g: 0.3254717, b: 0, a: 0}
+  _hungryColor: {r: 0.4603061, g: 0.3496438, b: 0.2832464, a: 1}
   _maxEnergy: 100
   _energyDepleationRate: 2
-  _tiredColor: {r: 0.18579161, g: 0.4379744, b: 0.76729554, a: 0}
+  _tiredColor: {r: 0.19668925, g: 0.5471268, b: 1, a: 1}
   _depleationSpeed: 0.5
   _agentStat: 0
-  _acceptedDist: 2
+  _acceptedDist: 6
   _crowd: {fileID: 0}
+  _runner: {fileID: 3853728234938254601}

@@ -46,7 +46,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 892a8050b9fe07648afb89d7b8a37add, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _duration: 15
+  _duration: 30
+  _explosion: {fileID: 0}
   <PolyRef>k__BackingField: 0
   <NeiRefs>k__BackingField: 
   _firePropagation: 0.001

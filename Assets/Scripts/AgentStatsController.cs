@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using DotRecast.Core.Numerics;
 using DotRecast.Detour.Crowd;
+using Scripts.AI.FSMs.UnityIntegration;
 using Scripts.Pathfinding;
 using Scripts.Random;
 using Scripts.Structure;
@@ -36,6 +37,7 @@ namespace Scripts
         public DtCrowdAgent ID => _agentID;
         [SerializeField] private DRCrowdManager _crowd;
         public DRCrowdManager Crowd => _crowd;
+        [SerializeField] private StateMachineRunner _runner;
 
         public (RcVec3f Pos, long Ref) LastRef { get; set; }
         public (RcVec3f Pos, long Ref) CurRef { get; set; }
@@ -72,9 +74,6 @@ namespace Scripts
         public void AwakeOrdered()
         {
             _random = new SeedRandom(gameObject);
-        }
-        private void Awake()
-        {
             _renderer       = GetComponentInChildren<Renderer>();
             _normalColor    = _renderer.material.color;
             _wfsChange      = new WaitForSeconds(_depleationSpeed);
@@ -92,6 +91,8 @@ namespace Scripts
             _crowd.SwitchToNormal(_agentID);
             
             ChooseRandomState();
+
+            _runner.enabled = true;
         }
 
         private long _lastPolyRef = 0;
@@ -107,9 +108,7 @@ namespace Scripts
                 if ( _crowd.Explosion.PolyHasFire(_lastPolyRef) )
                     ExplosionRadius = 3;
             }
-        }
-        public void UpdateOrdered()
-        {
+
             Profiler.BeginSample("DR Agent");
 
             if ( _agentID != null )
@@ -118,6 +117,17 @@ namespace Scripts
                 if ( _agentID.vel.Length() > 0.1f )
                     transform.rotation = DRcHandle.ToDotQuat(_agentID.vel);
             }
+        }
+        public void UpdateOrdered()
+        {
+            /*Profiler.BeginSample("DR Agent");
+
+            if ( _agentID != null )
+            {
+                transform.position = DRcHandle.ToUnityVec3(_agentID.npos);
+                if ( _agentID.vel.Length() > 0.1f )
+                    transform.rotation = DRcHandle.ToDotQuat(_agentID.vel);
+            }*/
         }
 
         public void Deactivate()
@@ -277,6 +287,11 @@ namespace Scripts
                 return $"null";
 
             return $"[DRAgent] Pos: {_agentID.npos} | Target: {_agentID.targetPos} | Vel: {_agentID.vel} | State: {_agentID.state} | TargetState: {_agentID.targetState} | Speed: {_agentID.desiredSpeed }";
+        }
+
+        private void OnDrawGizmosSelected()
+        {
+            Gizmos.DrawLine(transform.position, DRcHandle.ToUnityVec3(ID.targetPos) );
         }
     }
 }

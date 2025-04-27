@@ -102,5 +102,5 @@ MonoBehaviour:
   _radius: 149.74
   _pivot: {fileID: 6176558493338292751}
   _tooManyAgents: 2
-  _area: {fileID: 2665576758902317258}
+  _tries: 6
   _spacing: 6

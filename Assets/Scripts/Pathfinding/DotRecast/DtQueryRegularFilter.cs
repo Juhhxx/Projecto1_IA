@@ -21,7 +21,7 @@ namespace Scripts.Pathfinding.DotRecast
         public DtQueryRegularFilter(ExplosionManager explosionManager) : base(explosionManager)
         {
             for (int i = 0; i < 10; i++)
-                _areaCost[i] = 1f;
+                _areaCost[i] = i+1f;
         }
 
         /// <summary>

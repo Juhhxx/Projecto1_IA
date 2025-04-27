@@ -103,8 +103,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _radius: 140
   _pivot: {fileID: 5924489718246470300}
-  _tooManyAgents: 3
-  _area: {fileID: 8046056844918949543}
+  _tooManyAgents: 2
+  _tries: 3
   _spacing: 3
 --- !u!114 &1893544301277398547
 MonoBehaviour:
