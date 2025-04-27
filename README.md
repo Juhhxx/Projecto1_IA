@@ -1,4 +1,4 @@
-# IA_BoomFest
+# IA BoomFest
 
 ## IA - Projeto 1
 
@@ -358,14 +358,6 @@ classDiagram
   class DtQueryRegularHeuristic
 
   class AgentStatsController
-  class StateMachineRunner
-  class StateMachine
-  class StateAbstract
-  class TransitionAbstract
-  <<abstract>> TransitionAbstract
-  class StateTransition
-  <<struct>> StateTransition
-  class Transition
 
   class Structure~T~
   class Exit
@@ -465,39 +457,39 @@ classDiagram
 
 
   class State
-  <<abstract>> State
-  class StateMachine
   class Transition
+  class StateMachine
   class StateAbstract
   <<abstract>> StateAbstract
-  class StateMachineCreator
   class TransitionAbstract
+  <<abstract>> TransitionAbstract
+  class StateTransition
+  <<struct>> StateTransition
+  class StateMachineCreator
+  class StateMachineRunner
 
-
-  State --> Transition
-
-  StateMachine --> State
-  StateMachine --> Transition
+  State o-- Transition
 
   Transition --> State
 
+  StateMachine --> State
+
   StateAbstract --|> ScriptableObject
   StateAbstract --> State
-  StateAbstract --> TransitionAbstract
-
-  StateMachineCreator --|> ScriptableObject
-  StateMachineCreator --> StateMachine
-  StateMachineCreator --> GameObject
-  StateMachineCreator --> StateAbstract
-  StateMachineCreator o-- StateTransition
-  StateTransition --> StateAbstract
-  StateTransition o-- TransitionAbstract
+  StateAbstract --> GameObject
 
   TransitionAbstract --|> ScriptableObject
   TransitionAbstract --> Transition
   TransitionAbstract --> StateAbstract
   TransitionAbstract --> GameObject
 
+  StateMachineCreator --|> ScriptableObject
+  StateMachineCreator --> StateMachine
+  StateMachineCreator o-- StateTransition
+  StateMachineCreator --> GameObject
+
+  StateTransition --> StateAbstract
+  StateTransition o-- TransitionAbstract
 
   class TransitionCheckAgentStat
   class TransitionCheckExplosionRadius
@@ -505,21 +497,17 @@ classDiagram
   class TransitionWaitForSeconds
 
 
-  TransitionCheckAgentStat ..|> TransitionAbstract
-  TransitionCheckAgentStat --> GameObject
+  TransitionCheckAgentStat --|> TransitionAbstract
   TransitionCheckAgentStat --> AgentStatsController
   TransitionCheckAgentStat --> AgentStat
 
-  TransitionCheckExplosionRadius ..|> TransitionAbstract
-  TransitionCheckExplosionRadius --> GameObject
+  TransitionCheckExplosionRadius --|> TransitionAbstract
   TransitionCheckExplosionRadius --> AgentStatsController
 
-  TransitionKeyPressed ..|> TransitionAbstract
+  TransitionKeyPressed --|> TransitionAbstract
   TransitionKeyPressed --> KeyCode
 
-  TransitionWaitForSeconds ..|> TransitionAbstract
-  TransitionWaitForSeconds --> GameObject
-
+  TransitionWaitForSeconds --|> TransitionAbstract
 
 
   class StateDeath
@@ -531,37 +519,30 @@ classDiagram
   
 
   StateDeath --|> StateAbstract
-  StateDeath --> GameObject
   StateDeath --> AgentStatsController
 
   StateHungry --|> StateAbstract
-  StateHungry --> GameObject
   StateHungry --> AgentStatsController
   StateHungry --> Structure~FoodArea~
   StateHungry --> StateNavHelper
 
   StatePanic --|> StateAbstract
-  StatePanic --> GameObject
   StatePanic --> AgentStatsController
   StatePanic --> Structure~Exit~
   StatePanic --> StateNavHelper
 
   StateParalyzed --|> StateAbstract
-  StateParalyzed --> GameObject
   StateParalyzed --> AgentStatsController
 
   StateTired --|> StateAbstract
-  StateTired --> GameObject
   StateTired --> AgentStatsController
   StateTired --> Structure~GreenSpace~
   StateTired --> StateNavHelper
 
   StateWatchConcert --|> StateAbstract
-  StateWatchConcert --> GameObject
   StateWatchConcert --> AgentStatsController
   StateWatchConcert --> Structure~Stage~
   StateWatchConcert --> StateNavHelper
-
 
 
   AgentStatsController --> DRCrowdManager
@@ -571,11 +552,6 @@ classDiagram
   AgentStatsController --> AgentStat
   AgentStatsController --> ISeedRandom
 
-  StateMachineRunner --> StateMachine
-  StateMachine *-- StateAbstract
-  StateMachine *-- TransitionAbstract
-  StateAbstract --> StateTransition
-  TransitionAbstract --> Transition
 ```
 
 ---
