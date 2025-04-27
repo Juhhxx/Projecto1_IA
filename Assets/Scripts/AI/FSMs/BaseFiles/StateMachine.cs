@@ -10,12 +10,22 @@ namespace Scripts.AI.FSMs.BaseFiles
     {
         // The current State that is being executed.
         private State _currentState;
+        // The initial State that the SM starts in.
+        private State _initialState;
 
-        public StateMachine( State initialState)
+        public StateMachine(State initialState)
         {
             _currentState = initialState;
+            _initialState = initialState;
         }
 
+        /// <summary>
+        /// Method that restes the State Machine to it's default State, without triggering any Transitions.
+        /// </summary>
+        public void ResetStateMachine()
+        {
+            _currentState = _initialState;
+        }
         /// <summary>
         /// Method that runs the State Machines Actiosn and manages all States.
         /// </summary>

@@ -65,7 +65,14 @@ namespace Scripts.AI.FSMs.UnityIntegration
             _stateMachine = new StateMachine(_initialState.State);
         }
         /// <summary>
-        /// method for running the State Machine.
+        /// Method for reseting the State Machine.
+        /// </summary>
+        public void ResetStateMachine()
+        {
+            _stateMachine.ResetStateMachine();
+        }
+        /// <summary>
+        /// Method for running the State Machine.
         /// </summary>
         public void Run()
         {

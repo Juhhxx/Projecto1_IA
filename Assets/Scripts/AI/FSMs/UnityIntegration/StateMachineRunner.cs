@@ -7,6 +7,7 @@ namespace Scripts.AI.FSMs.UnityIntegration
     {
         [Expandable][SerializeField] private StateMachineCreator _stateMachineModel;
         private StateMachineCreator _stateMachine;
+        public StateMachineCreator StateMachine => _stateMachine;
 
         private void Start()
         {

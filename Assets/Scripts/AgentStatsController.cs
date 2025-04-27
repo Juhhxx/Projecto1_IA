@@ -101,6 +101,7 @@ namespace Scripts
             
             ChooseRandomState();
 
+            _runner.StateMachine.ResetStateMachine();
             _runner.enabled = true;
         }
 
