@@ -312,13 +312,23 @@ Class that defines and runs a `State Machine` with various `States`and `Transiti
 
 #### `StateAbstract`
 
+Abstract class, that inherits from `ScriptableObject`, it defines various abstract methods that when overwritten, will work as the Entry, State and Exit `Actions` of a `State`. This class let's us create various `States` in Unity that can be used to modularly build `State Machines`.
+
 #### `TransitionAbstract`
+
+Abstract class, that inherits from `ScriptableObject`, it defines various abstract methods that when overwritten, will work as the Actions and Conditions for a `Transition`, it also contais a reference to a `StateAbstract` that can be defined via the Unity Inspector.
 
 #### `StateTransition`
 
+Struct that that defines a `State`and it's `Transitions` (in a `List<t>`). It is used to help build `State`classes without hardcoding the `Transitions`, as we are able to read the list containing each `States` `Transitions`and add them through code.
+
 #### `StateMachineCreator`
 
+Class, that inherits from `ScriptableObject`, it contains a `List<t>` of `StateTransitions` that form the `State Machine`. This class allows us to build `State Machines` inside the Unity Inspector, only by draging, creating and configuring `StateAbstract` and `TrasitionAbstract` `ScriptableObjects`.
+
 #### `StateMachineRunner`
+
+Class, that inherits from `Monobhehaviour`, it contains a reference to a `StateMachineCreator`. It creates a copy of the referenced `State Machine` and runs it via the `void Update()` method.
 
 #### UML Diagram
 
