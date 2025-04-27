@@ -630,6 +630,12 @@ This project aimed to simulate large-scale crowd behavior during an event, focus
 
 The use of seeded randomness and triangular distributions reproduced more realistic behaviors, and optimizations were essential to maintain performance under heavy load. The results demonstrate that simple agent logic, combined with efficient navigation and environment design, can successfully recreate complex crowd behaviors observed in real-world panic situations.
 
+While we tested the simulation we noticed that much of the behaviours we researched were being exhibited by the agents, like the *bottleneck effect*, the formation of huge crowds that trample each other, herding and chaotic movement, this reveals that we were able to create what we believe is a somewhat realistic simulation, where we can find a lot of behaviours that replicate real life crowd formations.
+
+All our efforts to ensure a smooth-running simulation, like the 2.5D approach for movement, using unlit graphics and simple geometry, also payed off, as we were able to have many independent agents running at the same time with reasonably good frame rates.
+
+In conclusion, we think we were able to achieve the majority of what we set out to do. Our simulation is able to generate and support up to 1000 agents (and more!) all independent from each other, all moving according to their objectives and using A* pathfinding.
+
 ---
 
 ## References
@@ -638,7 +644,7 @@ The use of seeded randomness and triangular distributions reproduced more realis
 
 * [UniRecast Setup Video (YouTube)](https://www.youtube.com/watch?v=lXHL1HFL5wo)
 * [Crowd Simulation Lecture (YouTube)](https://www.youtube.com/watch?v=ldOprmqSt7o)
-* [Unite 2016 - Overthrowing the MonoBehaviour Tyranny in a Glorious Scriptable Object Revolution](https://www.youtube.com/watch?v=6vmRwLYWNRo)
+* [Unite 2016 - Overthrowing the MonoBehaviour Tyranny in a Glorious Scriptable Object Revolution (Youtube)](https://www.youtube.com/watch?v=6vmRwLYWNRo)
 
 ### Open Code
 
@@ -649,7 +655,7 @@ The use of seeded randomness and triangular distributions reproduced more realis
 * [DotRecast Unity Port Discussion (Unity Forum)](https://discussions.unity.com/t/dotrecast-a-port-of-recast-detour-navigation-mesh-toolset-for-games-unity3d-servers-c/930615)
 * [UniRecast GitHub Repository](https://github.com/ikpil/UniRecast)
 * [Reflection Probe Atlas Overhead Discussion (Unity Forum)](https://discussions.unity.com/t/update-reflection-probe-atlas-causing-large-overhead-in-empty-scene/1527603/5)
-* [Unity Simple FSMs Project - Moodle, Cadeira de IA](https://moodle.ensinolusofona.pt/mod/resource/view.php?id=439813)
+* [Unity Simple FSMs Project (Moodle))](https://moodle.ensinolusofona.pt/mod/resource/view.php?id=439813)
 * [Crowds in front of bottlenecks at entrances from the perspective of physics and social psychology](https://royalsocietypublishing.org/doi/10.1098/rsif.2019.0871)
 
 ### Libraries
