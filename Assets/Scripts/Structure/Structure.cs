@@ -71,7 +71,7 @@ namespace Scripts.Structure
         /// </summary>
         /// <param name="pos">The world position to search from.</param>
         /// <returns>The closest structure of type T.</returns>
-        public static T FindNearest(RcVec3f pos)
+        public static T FindNearest(RcVec3f pos, Structure<T> avoid = null)
         {
             if (_structures.Count == 0)
             {
@@ -85,6 +85,8 @@ namespace Scripts.Structure
 
             foreach (T structure in _structures)
             {
+                if ( structure == avoid ) continue;
+
                 dist = RcVec3f.Distance(pos, structure.Position);
                 if (dist < minDist)
                 {
@@ -119,39 +121,26 @@ namespace Scripts.Structure
         /// <param name="pos">Current agent position.</param>
         /// <param name="structure">Reference to the current structure, which may be updated.</param>
         /// <returns>Tuple containing the selected position and its polygon reference.</returns>
-        public (RcVec3f, long) GetBestSpot(RcVec3f pos, ref Structure<T> structure)
+        public static (RcVec3f, long) GetBestSpot(RcVec3f pos, Structure<T> structure, out Structure<T> newStruct)
         {
+            newStruct = null;
+
             // Pick a random spot using triangular distribution
-            (RcVec3f, long) next = _places[ _rand.Triangular(0, _places.Length) ];
+            (RcVec3f, long) next =
+                structure._places[ structure._rand.Triangular(0, structure._places.Length) ];
 
             Debug.DrawLine(DRcHandle.ToUnityVec3(pos), DRcHandle.ToUnityVec3(next.Item1));
 
-            for ( int i = 0; i < _tries ; i++ )
+            for ( int i = 0; i < structure._tries ; i++ )
             {
-                if ( IsGoodSpot(next.Item2) ) // return if found good spot
+                if ( structure.IsGoodSpot(next.Item2) ) // return if found good spot
                     return next;
-                next = _places[ _rand.Triangular(0, _places.Length) ];
+                next = structure._places[ structure._rand.Triangular(0, structure._places.Length) ];
             }
 
             // If no good spot found, try finding a better structure
-            T chosen = _structures[0];
-            float minDist = RcVec3f.Distance(pos, chosen.Position);
-            float dist;
+            newStruct = FindNearest(pos, structure);
 
-            foreach (T struc in _structures)
-            {
-                if ( structure == chosen ) continue;
-
-                dist = RcVec3f.Distance(pos, structure.Position);
-
-                if ( dist < minDist ) // if the distance is smaller than last
-                {
-                    minDist = dist;
-                    chosen = struc;
-                }
-            }
-
-            structure = chosen;
             return (structure.Position, structure.Ref);
         }
 

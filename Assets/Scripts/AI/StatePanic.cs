@@ -23,7 +23,7 @@ namespace Scripts.AI
         }
         protected override void StateAction()
         {
-            if ( FindSpot() )
+            if ( StateNavHelper.FindSpot(_agent, ref _exit) )
                 _agent.Deactivate();
         }
         protected override void ExitAction()
@@ -36,31 +36,6 @@ namespace Scripts.AI
             _agent = gameObject.GetComponent<AgentStatsController>();
 
             base.state = new State(Name,EntryAction,StateAction,ExitAction);
-        }
-
-        private bool FindSpot()
-        {
-            if ( _exit != null )
-            {
-                if ( _exit.EnteredArea( _agent.ID.npos ) )
-                {
-                    _agent.NextRef = _exit.GetBestSpot( _agent.ID.npos, ref _exit );
-                    _agent.Crowd.SetTarget(_agent.ID, _agent.NextRef.Ref, _agent.NextRef.Pos);
-                    _exit = null;
-                }
-            }
-            else if ( RcVec3f.Distance(_agent.ID.npos, _agent.NextRef.Pos ) < _agent.AcceptedDist )
-            {
-                if ( _exit.IsGoodSpot( _agent.NextRef.Ref ) )
-                    return true;
-            }
-            if ( _agent.ID.vel.Length() < 0.1f )
-            {
-                _agent.NextRef = _exit.GetBestSpot( _agent.ID.npos, ref _exit );
-                _agent.Crowd.SetTarget(_agent.ID, _agent.NextRef.Ref, _agent.NextRef.Pos);
-            }
-
-            return false;
         }
     }
 }
