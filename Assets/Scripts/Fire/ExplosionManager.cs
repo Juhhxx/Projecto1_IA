@@ -27,6 +27,8 @@ namespace Scripts.Fire
         [SerializeField] private int _FirePerUpdateBatch = 2;
         [SerializeField] private int _runEveryframe = 2;
         [SerializeField] private float _explosionChancePerFrame = 0.001f;
+        [SerializeField] private float _activationTime = 20f;
+        private float _time;
 
         private static Dictionary<long, Fire> _firePolys = new();
         [SerializeField] private List<Fire> _firePolyList = new();
@@ -43,6 +45,8 @@ namespace Scripts.Fire
         /// </summary>
         internal protected override void AwakeOrdered()
         {
+            _time = 0;
+            
             _activeFires = new List<Fire>();
             _inactiveFires = _firePolyList.ToList();
 
@@ -178,6 +182,11 @@ namespace Scripts.Fire
         /// </summary>
         internal protected override void UpdateOrdered()
         {
+            if ( _activationTime > _time)
+            {
+                _time += Time.deltaTime;
+                return;
+            }
             if (Time.frameCount % _runEveryframe != 0) // run every _runEveryframe frames
                 return;
 

@@ -101,7 +101,8 @@ namespace Scripts
             
             ChooseRandomState();
 
-            _runner.StateMachine.ResetStateMachine();
+            if ( _runner.StateMachine != null )
+                _runner.StateMachine.ResetStateMachine();
             _runner.enabled = true;
         }
 
@@ -140,13 +141,10 @@ namespace Scripts
                     0.15f);
             }
 
-            if ( ExplosionRadius == 3 ) return;
+            if ( ExplosionRadius != 3 && _crowd.LookForFire(( pos, currPolyRef ), _panicCheckRadius))
+                _crowd.Panic(this);
 
-            if ( _crowd.CheckForPanic( ( pos, currPolyRef ), _panicCheckRadius) )
-            {
-                ExplosionRadius = 3;
-                Debug.Log("Found panic or fire, PANIC!!!!!");
-            }
+            _crowd.CheckForPanic( this, _panicCheckRadius);
         }
 
         /// <summary>
@@ -171,6 +169,7 @@ namespace Scripts
         {
             _crowd.RemoveAgent(this);
             _agentID = null;
+            _runner.enabled = false;
             
             gameObject.SetActive(false);
         }

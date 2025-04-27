@@ -343,7 +343,7 @@ namespace Scripts.Pathfinding
         {
             Debug.Log("Panic set");
             // warn all in range agents to panic
-            agent.ExplosionRadius = 2;
+            agent.ExplosionRadius = 3;
 
             _crowd.UpdateAgentParameters(agent.ID, _panicParams);
         }
@@ -361,26 +361,17 @@ namespace Scripts.Pathfinding
         /// <summary>
         /// Checks if fire or explosion exists near a given polygon.
         /// </summary>
-        public bool CheckForPanic((RcVec3f, long) poly, float checkRadius)
+        public void CheckForPanic(AgentStatsController agent, float radius)
         {
-            if (LookForFire(poly, checkRadius))
-                return true;
-
-            float deathRadiusSq = checkRadius * checkRadius;
-            float x = poly.Item1.X;
-            float z = poly.Item1.Z;
-
-            foreach (AgentStatsController agent in _activeAgents)
+            foreach ( DtCrowdNeighbour nei in agent.ID.neis )
             {
-                if (agent.ExplosionRadius != 1) continue;
+                if ( nei.agent == null ) continue;
+                if ( nei.dist >= radius ) continue;
+                if ( nei.agent.option.maxSpeed != _panicParams.maxSpeed ) continue;
 
-                float distSq = (x - agent.ID.npos.X) * (x - agent.ID.npos.X) + (z - agent.ID.npos.Z) * (z - agent.ID.npos.Z);
-
-                if (distSq <= deathRadiusSq)
-                    return true;
+                Panic(agent);
+                return;
             }
-
-            return false;
         }
 
         /// <summary>
