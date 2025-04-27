@@ -28,10 +28,10 @@ namespace Scripts.AI
             if (_exit.EnteredArea(_agent.ID.npos))
             {
                 // If currently targeting the center (structure.Ref) or wrong target, pick best spot
-                if ( _agent.NextRef.Ref != _agent.ID.targetRef )
-                {
-                    (RcVec3f, long) nextRef = Structure<Exit>.GetBestSpot(_agent.ID.npos, _exit, out _);
+                (RcVec3f, long) nextRef = _exit.NearestPoint(_agent.ID.npos);
 
+                if ( _agent.NextRef.Ref != _agent.ID.targetRef || nextRef.Item2 != _agent.NextRef.Ref )
+                {
                     _agent.NextRef = nextRef;
                     _agent.Crowd.SetTarget(_agent.ID, _agent.NextRef.Ref, _agent.NextRef.Pos);
                 }

@@ -94,6 +94,28 @@ namespace Scripts.Structure
         }
 
         /// <summary>
+        /// Finds the nearest point of  specific structure.
+        /// </summary>
+        public (RcVec3f, long) NearestPoint(RcVec3f pos)
+        {
+            (RcVec3f, long) chosen = _places[0];
+            float minDist = RcVec3f.Distance(pos, chosen.Item1);
+            float dist;
+
+            foreach ( (RcVec3f, long) point in _places)
+            {
+                dist = RcVec3f.Distance(pos, point.Item1);
+                if (dist < minDist)
+                {
+                    minDist = dist;
+                    chosen = point;
+                }
+            }
+
+            return chosen;
+        }
+
+        /// <summary>
         /// Sets up specific sample points for the structure.
         /// Must be implemented by each subclass.
         /// </summary>
