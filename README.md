@@ -210,7 +210,7 @@ A singleton Manager responsible for coordinating all seeded random streams. It h
 
 Defines a generic interface for seeded random number generators tied to specific GameObjects. It provides methods for obtaining random integers/floats and triangular-distributed values, ensuring each generator has an Owner object and a unique ID for seeding.
 
-##### SeedRandom
+##### `SeedRandom`
 
 A general-purpose implementation of `ISeedRandom`. Each instance is associated with a GameObject and registers itself with the `RandomManager` to obtain a unique seed. It provides uniform random ranges (Range(int, int) and Range(float, float)) and triangular-distributed randoms (favoring mid-range values) for more natural variation.
 
@@ -297,6 +297,28 @@ Regular heuristic returning the squared Euclidean distance from a node to the go
 ##### `DtQueryPanicHeuristic`
 
 Panic-mode heuristic that encourages moving away from `Fire`​. It computes a cost by subtracting the squared distance from a known `Fire` position (if any) from the distance to the goal, thus biasing paths that increase distance from `Fires`.
+
+#### `State`
+
+Class that defines a `State` in a State Machine. It contains a `List<T>` of `Transitions` and 3 `delegates` of type `Action` (`EntryActions`, `StateActions` and `ExitActions`) that store all methods to be performed in the beggining, during and at the end of the `State`. There is also the method `void AddTransitions(Transition transition)` that adds a `Transition`to the list Transitions.
+
+#### `Transition`
+
+Class that defines a `Transition` in a State Machine. It contains a reference to a `State`, to store what `State` the `Transition` leads to, and 2 delegates, one of type `Action`, to store methods to performed when the `Transition` is triggered, and one of type `Func<bool>`, to store the a method that check the condition for the `Transition` to be triggered. There is also the method `bool IsTriggered()` that checks if the `Transition`has been triggered and returns true or false accordingly.
+
+#### `StateMachine`
+
+Class that defines and runs a `State Machine` with various `States`and `Transitions`. It contains a reference to a `State`, to store what `State` the `State Machine` starts running. There are also 2 methods `void ResetStateMachine()`, that resets the `State Machine`to it's default `State`, and `Action Update()`, that manages the `State Machine` by analyzing the current `States` `Transitions` to see if they've been triggered, and changing `States`if necessary, this method returns an `Action` type delegate with all methods to be performed in each frame.
+
+#### `StateAbstract`
+
+#### `TransitionAbstract`
+
+#### `StateTransition`
+
+#### `StateMachineCreator`
+
+#### `StateMachineRunner`
 
 #### UML Diagram
 
