@@ -17,6 +17,15 @@
   * Setup State Machine for Agents.
 
 * Mariana Martins
+  * Dotrecast to unity implementations and navmesh through DRcHandle.
+  * Different pathfinding behaviours (panic/regular) through Filters and Heuristics.
+  * Crowd behaviour system with object pooling through DRCrowdManager.
+  * Ordered Execution through Manager system.
+  * Seeded random system.
+  * Structures system, food area, green space, stage, exits and their handling.
+  * Agent state's update target position logic.
+  * Explosion and fire system and their effect on agent states.
+  * Sprites
 
 ---
 
@@ -62,8 +71,6 @@ This project aims to simulate crowd behaviour at large scale events with differe
 
 To achieve an efficient simulation with support for a high number of agents simultaneously, we chose to use **DotRecast**, a library that allows the generation of navigation meshes (navmeshes) and path calculation based on the A* algorithm, and should optimize pathfinding without relying on too detailed physics. We also implemented a **finite state machine (FSM)** to control each agent's high-level decisions with the same intent, as the required states, watching concert, eating, resting and panicked are few, and therefore a good number for FSM implementation.
 
-• why choose 2dvs3dvs2.5d here
-
 ### Crowd Panic Research
 
 According to Helbing et al. (2007), panic is triggered by sudden hazards, like the explosions and `Fire` in this project, and spreads quickly as people replicate the fear driven actions of those around them. In learning this, and according to the project guidelines, panic would not be only spread through the immediate explosion range, but also through through a chain reaction propagated continuously by panicked agents.
@@ -97,14 +104,13 @@ For our project this means defining states and values clearly, having a modular 
 
 ## Methodology
 
-• Explicação de como a simulação foi implementada, 2D/2.5D ou 3D, tipo de
-movimento dos agentes (cinemático ou dinâmico), com descrição de todas
-as técnicas de IA usadas (incluindo figuras, por exemplo ilustrando as árvores e/ou FSMs desenvolvidas), valores parametrizáveis (e.g., número de
-agentes, velocidades, etc), descrição da implementação (incluindo diagramas
-UML simples ou fluxogramas de algum algoritmo mais complexo que tenham
-desenvolvido).
-• Esta secção deve ter detalhe suficiente para que outra pessoa consiga replicar
-o comportamento da vossa simulação sem olhar para o respetivo código
+To achieve a scalable and efficient simulation we chose a 2.5D approach where agents are represented with 2D sprites, while the environment uses basic 3D geometry that allows us to bake and query a DotRecast navigation mesh.
+
+Because of these objects that have many instances like fire and agent, rendered with sprites they take much less time to render, and since all materials are unlit, we avoid unnecessary graphical overhead from the 3D geometry for the navmesh as well. Agents move through direct velocity control, without forces and the navigation and pathfinding were handled through DotRecast and DetourCrowd libraries, which gave us a lot of control over agent behaviour while keeping costs minimal.
+
+We utilized UniRecast to import DotRecast libraries into Unity, enabling separate usage of its modules. Despite challenges like lack of documentation and incomplete demo projects, the system was successfully integrated into the project after extensive testing.
+
+Throughout the development process we put scalability and optimization first.
 
 ### Seeded Random Determinism
 
@@ -358,6 +364,14 @@ classDiagram
   class DtQueryRegularHeuristic
 
   class AgentStatsController
+  class StateMachineRunner
+  class StateMachine
+  class StateAbstract
+  class TransitionAbstract
+  <<abstract>> TransitionAbstract
+  class StateTransition
+  <<struct>> StateTransition
+  class Transition
 
   class Structure~T~
   class Exit
@@ -378,6 +392,7 @@ classDiagram
 
   class ExplosionManager
   class Fire
+
 
 
   MonoBehaviour <|-- Structure~T~
@@ -426,9 +441,12 @@ classDiagram
 
   RandomManager --> ISeedRandom
   RandomManager --> System.Random
+
   ISeedRandom --> System.Random
+
   SeedRandom ..|> ISeedRandom
   SeedRandom --> RandomManager
+
   RcSeedRandom --> RandomManager
   RcSeedRandom ..|> ISeedRandom
   RcSeedRandom ..|> IRcRand
@@ -497,17 +515,17 @@ classDiagram
   class TransitionWaitForSeconds
 
 
-  TransitionCheckAgentStat --|> TransitionAbstract
+  TransitionCheckAgentStat ..|> TransitionAbstract
   TransitionCheckAgentStat --> AgentStatsController
   TransitionCheckAgentStat --> AgentStat
 
-  TransitionCheckExplosionRadius --|> TransitionAbstract
+  TransitionCheckExplosionRadius ..|> TransitionAbstract
   TransitionCheckExplosionRadius --> AgentStatsController
 
-  TransitionKeyPressed --|> TransitionAbstract
+  TransitionKeyPressed ..|> TransitionAbstract
   TransitionKeyPressed --> KeyCode
 
-  TransitionWaitForSeconds --|> TransitionAbstract
+  TransitionWaitForSeconds ..|> TransitionAbstract
 
 
   class StateDeath
@@ -580,43 +598,26 @@ detalhes.
 
 ---
 
-## Acknowledgements
-
-• Nesta secção devem agradecer às pessoas externas ao grupo que vos ajudaram
-no projeto, caso tenha sido esse o caso.
-
----
-
 ## References
 
+### Videos
 
-<https://www.sciencedirect.com/science/article/pii/S2352146514001355>
-
-<https://www.researchgate.net/publication/226065087_Pedestrian_Crowd_and_Evacuation_Dynamics>
-
-<https://peerj.com/articles/cs-36.pdf>
-
-<https://www.youtube.com/watch?v=ldOprmqSt7o>
+* [UniRecast Setup Video (YouTube)](https://www.youtube.com/watch?v=lXHL1HFL5wo)
+* [Crowd Simulation Lecture (YouTube)](https://www.youtube.com/watch?v=ldOprmqSt7o)
 
 ### Open Code
 
-* [Stack Overflow, How to draw tables](https://stackoverflow.com/questions/856845/how-to-best-way-to-draw-table-in-console-app-c)
-* [Adding Objects To ScrollView through Script](https://gamedev.stackexchange.com/questions/175483/unity-adding-objects-through-script-to-scrollview-setparent-objects-overlap)
-* [Adding a File With an Extension](https://stackoverflow.com/questions/3152157/find-a-file-with-a-certain-extension-in-folder)
-* [Iterate Through a 2 Dimensional Array in C#](https://stackoverflow.com/questions/8184306/iterate-through-2-dimensional-array-c-sharp)
 * [Markdown inheritdoc](https://stackoverflow.com/questions/74600218/any-benefit-to-using-inheritdoc)
+* [Pedestrian Crowd Simulation Paper (ScienceDirect)](https://www.sciencedirect.com/science/article/pii/S2352146514001355)
+* [Pedestrian Crowd and Evacuation Dynamics (ResearchGate)](https://www.researchgate.net/publication/226065087_Pedestrian_Crowd_and_Evacuation_Dynamics)
+* [Crowd Simulation Paper (PeerJ)](https://peerj.com/articles/cs-36.pdf)
+* [DotRecast Unity Port Discussion (Unity Forum)](https://discussions.unity.com/t/dotrecast-a-port-of-recast-detour-navigation-mesh-toolset-for-games-unity3d-servers-c/930615)
+* [UniRecast GitHub Repository](https://github.com/ikpil/UniRecast)
+* [Reflection Probe Atlas Overhead Discussion (Unity Forum)](https://discussions.unity.com/t/update-reflection-probe-atlas-causing-large-overhead-in-empty-scene/1527603/5)
 
 ### Libraries
 
 * [Markdown docs](https://paperhive.org/help/markdown)
 * [Mermaid docs](https://mermaid.js.org/syntax/flowchart.html)
 * [Markdown cheat sheet](https://www.markdownguide.org/cheat-sheet/)
-* [Decorator Pattern Wikipedia](https://en.wikipedia.org/wiki/Decorator_pattern)
-* [MVC Design Pattern](https://www.geeksforgeeks.org/mvc-design-pattern/)
 * [Unity Scripting API](https://docs.unity3d.com)
-* [Refactoring - Composite Design Pattern](https://refactoring.guru/design-patterns/composite)
-* [Refactoring - Strategy Design Pattern](https://refactoring.guru/design-patterns/strategy)
-* [Von Neumann Neighborhood - Wikipedia](https://en.wikipedia.org/wiki/Von_Neumann_neighborhood)
-* [Moore Neighborhood - Wikipedia](https://en.wikipedia.org/wiki/Moore_neighborhood)
-* [Hotkeys & Strategy - Supreme Commander Beginner's Guide #3](https://www.youtube.com/watch?v=Ao_Zh7LQZ6k&t=267s)
-* [Microsoft C# Docs](https://learn.microsoft.com/en-us/dotnet/csharp/)
